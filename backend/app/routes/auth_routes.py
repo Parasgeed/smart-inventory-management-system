@@ -11,6 +11,8 @@ from app.auth.security import verify_password
 from app.auth.auth import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
+from app.auth.permissions import admin_required
+
 from app.auth.dependencies import get_current_user
 
 router = APIRouter(
@@ -100,4 +102,13 @@ def get_me(
         "username": current_user.username,
         "email": current_user.email,
         "role_id": current_user.role_id
+    }
+
+@router.get("/admin-only")
+def admin_only_route(
+    current_user = Depends(get_current_user)
+):
+    admin_required(current_user)
+    return {
+        "message": "Welcome, Admin!"
     }
