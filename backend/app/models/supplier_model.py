@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from datetime import datetime, timezone
 from app.database.database import Base
+from sqlalchemy.orm import relationship
 
 class Supplier(Base):
     __tablename__ = "suppliers"
@@ -13,3 +14,7 @@ class Supplier(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    products = relationship(
+    "Product",
+    back_populates="supplier"
+    )
