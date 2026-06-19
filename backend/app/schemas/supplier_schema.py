@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class SupplierCreate(BaseModel):
@@ -19,6 +19,14 @@ class SupplierCreate(BaseModel):
     gst_number: str | None = None
 
 
+class SupplierUpdate(BaseModel):
+    name: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
+    address: str | None = None
+    gst_number: str | None = None
+    is_active: bool | None = None
+
 class SupplierResponse(BaseModel):
     id: int
     name: str
@@ -28,5 +36,4 @@ class SupplierResponse(BaseModel):
     gst_number: str | None
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

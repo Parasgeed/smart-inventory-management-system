@@ -14,7 +14,10 @@ from app.models.sale_item_model import SaleItem
 from app.models.inventory_log_model import InventoryLog
 
 from app.routes.auth_routes import router as auth_router
+
 from app.routes.product_routes import router as product_router
+
+from app.routes.supplier_routes import router as supplier_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -23,7 +26,7 @@ app = FastAPI()
 
 app.include_router(auth_router)
 app.include_router(product_router)
-
+app.include_router(supplier_router)
 
 @app.get("/")
 def home():

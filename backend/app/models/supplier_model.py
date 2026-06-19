@@ -11,8 +11,9 @@ class Supplier(Base):
     email = Column(String(255), unique=True)
     phone = Column(String(20), unique=True, nullable=False)
     address = Column(String(500), nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    gst_number = Column(String(50), unique=True, nullable=True)
+    is_active = Column(Boolean,default=True,nullable=False)
+    created_at = Column(DateTime(timezone=True  ), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     products = relationship(
     "Product",
