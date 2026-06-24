@@ -7,6 +7,8 @@ from sqlalchemy import (
 
 from app.database.database import Base
 
+from sqlalchemy.orm import relationship
+
 
 class PurchaseItem(Base):
     __tablename__ = "purchase_items"
@@ -30,3 +32,13 @@ class PurchaseItem(Base):
     unit_price = Column(Float, nullable=False)
 
     subtotal = Column(Float, nullable=False)
+
+    purchase = relationship(
+       "Purchase",
+        back_populates="purchase_items"
+    )
+
+    product = relationship(
+       "Product",
+       back_populates="purchase_items"
+    )

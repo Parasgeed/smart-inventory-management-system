@@ -68,4 +68,7 @@ class Product(Base):
         onupdate=lambda: datetime.now(timezone.utc)
     )
     
-    
+    purchase_items = relationship(
+      "PurchaseItem",
+      back_populates="product"
+    )

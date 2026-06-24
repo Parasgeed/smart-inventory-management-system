@@ -21,6 +21,8 @@ from app.routes.supplier_routes import router as supplier_router
 
 from app.routes.category_routes import router as category_router
 
+from app.routes.purchase_routes import router as purchase_router
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -30,6 +32,10 @@ app.include_router(auth_router)
 app.include_router(product_router)
 app.include_router(supplier_router)
 app.include_router(category_router)
+
+app.include_router(purchase_router)
+
+
 
 @app.get("/")
 def home():

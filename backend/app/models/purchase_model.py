@@ -7,6 +7,8 @@ from sqlalchemy import (
     ForeignKey
 )
 
+from sqlalchemy.orm import relationship
+
 from datetime import datetime, timezone
 
 from app.database.database import Base
@@ -43,4 +45,20 @@ class Purchase(Base):
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
+    )
+     
+    supplier = relationship(
+       "Supplier",
+       back_populates="purchases"
+    )
+
+    user = relationship(
+       "User",
+        back_populates="purchases"
+    )
+
+    purchase_items = relationship(
+       "PurchaseItem",
+        back_populates="purchase",
+        cascade="all, delete-orphan"
     )
