@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CategoryCreate(BaseModel):
@@ -10,10 +10,16 @@ class CategoryCreate(BaseModel):
     description: str | None = None
 
 
+class CategoryUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
 class CategoryResponse(BaseModel):
     id: int
     name: str
     description: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
