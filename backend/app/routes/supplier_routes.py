@@ -15,8 +15,7 @@ router = APIRouter(
 def create_supplier(
     supplier: SupplierCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
-):
+    current_user=Depends(get_current_user)):
 
     admin_required(current_user)
 
@@ -29,28 +28,28 @@ def create_supplier(
             status_code=400,
             detail="Supplier already exists"
         )
-    
+
     if supplier.email:
         existing_email = db.query(Supplier).filter(
-        Supplier.email == supplier.email
-    ).first()
+            Supplier.email == supplier.email
+        ).first()
 
-    if existing_email:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already exists"
-        )
-    
+        if existing_email:
+            raise HTTPException(
+                status_code=400,
+                detail="Email already exists"
+            )
+
     if supplier.gst_number:
         existing_gst = db.query(Supplier).filter(
-        Supplier.gst_number == supplier.gst_number
-    ).first()
+            Supplier.gst_number == supplier.gst_number
+        ).first()
 
-    if existing_gst:
-        raise HTTPException(
-            status_code=400,
-            detail="GST number already exists"
-        )
+        if existing_gst:
+            raise HTTPException(
+                status_code=400,
+                detail="GST number already exists"
+            )
 
     new_supplier = Supplier(
         **supplier.model_dump()

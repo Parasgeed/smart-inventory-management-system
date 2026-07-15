@@ -27,6 +27,7 @@ class ProductCreate(BaseModel):
     supplier_id: int
     category_id: int
 
+
 class ProductUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
@@ -52,6 +53,4 @@ class ProductResponse(BaseModel):
     supplier_id: int
     category_id: int
 
-model_config = ConfigDict(
-    from_attributes=True
-)
+    model_config = ConfigDict(from_attributes=True)

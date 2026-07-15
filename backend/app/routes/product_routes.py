@@ -103,7 +103,7 @@ def update_product(
     
     return product
 
-@router.delete("/product_id")
+@router.delete("/{product_id}")
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
@@ -120,7 +120,7 @@ def delete_product(
             status_code=404,
             detail="Product not found"
         )
-    
+
     db.delete(product)
     db.commit()
 
