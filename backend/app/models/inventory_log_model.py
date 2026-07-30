@@ -22,6 +22,14 @@ class InventoryLog(Base):
         nullable=False
     )
 
+    # Who triggered this stock movement. Nullable so rows created before
+    # this column was added are preserved without requiring a backfill.
+    performed_by = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=True
+    )
+
     change_type = Column(String(50), nullable=False)
 
     reference_type = Column(String(50))

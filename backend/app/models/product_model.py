@@ -2,7 +2,7 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
-    Float,
+    Numeric,
     DateTime,
     ForeignKey
 )
@@ -28,9 +28,8 @@ class Product(Base):
 
     quantity = Column(Integer, default=0, nullable=False)
 
-    cost_price = Column(Float, nullable=False)
-
-    selling_price = Column(Float, nullable=False)
+    cost_price = Column(Numeric(10, 2), nullable=False)
+    selling_price = Column(Numeric(10, 2), nullable=False)
 
     reorder_level = Column(Integer, default=5, nullable=False)
 
@@ -69,6 +68,11 @@ class Product(Base):
     )
     
     purchase_items = relationship(
-      "PurchaseItem",
-      back_populates="product"
+        "PurchaseItem",
+        back_populates="product"
+    )
+
+    sale_items = relationship(
+        "SaleItem",
+        back_populates="product"
     )

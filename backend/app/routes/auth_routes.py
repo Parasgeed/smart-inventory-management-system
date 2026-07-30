@@ -112,3 +112,21 @@ def admin_only_route(
     return {
         "message": "Welcome, Admin!"
     }
+
+@router.get("/users")
+def get_all_users(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    admin_required(current_user)
+    # Return user details with role name (assuming user.role is eagerly loaded or accessible)
+    users = db.query(User).all()
+    return [
+        {
+            "id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "role_name": u.role.name if u.role else "Unknown"
+        }
+        for u in users
+    ]

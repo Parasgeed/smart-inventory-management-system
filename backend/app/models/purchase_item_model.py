@@ -1,7 +1,7 @@
 from sqlalchemy import (
     Column,
     Integer,
-    Float,
+    Numeric,
     ForeignKey
 )
 
@@ -29,9 +29,9 @@ class PurchaseItem(Base):
 
     quantity = Column(Integer, nullable=False)
 
-    unit_price = Column(Float, nullable=False)
+    unit_price = Column(Numeric(10, 2), nullable=False)
 
-    subtotal = Column(Float, nullable=False)
+    subtotal = Column(Numeric(10, 2), nullable=False)
 
     purchase = relationship(
        "Purchase",

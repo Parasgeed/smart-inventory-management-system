@@ -64,10 +64,12 @@ def create_supplier(
 
 @router.get("/", response_model=list[SupplierResponse])
 def get_suppliers(
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return db.query(Supplier).all()
+    return db.query(Supplier).offset(skip).limit(limit).all()
 
 
 

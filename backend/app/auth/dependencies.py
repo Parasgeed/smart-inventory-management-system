@@ -7,7 +7,7 @@ from app.models.user_model import User
 from app.auth.auth import verify_token
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/auth/login"
+    tokenUrl="/api/v1/auth/login"
 )
 
 

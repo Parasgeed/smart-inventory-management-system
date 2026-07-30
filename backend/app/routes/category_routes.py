@@ -50,11 +50,12 @@ def create_category(
 
 @router.get("/", response_model=list[CategoryResponse])
 def get_categories(
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-
-    return db.query(Category).all()
+    return db.query(Category).offset(skip).limit(limit).all()
 
 @router.get("/{category_id}", response_model=CategoryResponse)
 def get_category(

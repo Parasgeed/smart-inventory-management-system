@@ -1,7 +1,7 @@
 from sqlalchemy import (
     Column,
     Integer,
-    Float,
+    Numeric,
     String,
     DateTime,
     ForeignKey
@@ -36,9 +36,24 @@ class Purchase(Base):
         default=lambda: datetime.now(timezone.utc)
     )
 
+    po_number = Column(String(100), unique=True, nullable=False)
+    order_date = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc)
+    )
+    expected_delivery_date = Column(DateTime(timezone=True), nullable=True)
+
+    tax_rate = Column(Numeric(5, 2), nullable=True, default=0.0)
+    discount_rate = Column(Numeric(5, 2), nullable=True, default=0.0)
+    shipping_charges = Column(Numeric(10, 2), nullable=True, default=0.0)
+
+    payment_terms = Column(String(100), nullable=True)
+    delivery_address = Column(String(255), nullable=True)
+
     status = Column(String(30), default="PENDING")
 
-    total_amount = Column(Float, nullable=False)
+    total_amount = Column(Numeric(10, 2), nullable=False)
 
     notes = Column(String)
 

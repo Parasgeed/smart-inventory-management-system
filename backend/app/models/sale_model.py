@@ -1,7 +1,7 @@
 from sqlalchemy import (
     Column,
     Integer,
-    Float,
+    Numeric,
     String,
     DateTime,
     ForeignKey
@@ -10,6 +10,7 @@ from sqlalchemy import (
 from datetime import datetime, timezone
 
 from app.database.database import Base
+from sqlalchemy.orm import relationship
 
 
 class Sale(Base):
@@ -32,9 +33,19 @@ class Sale(Base):
         default=lambda: datetime.now(timezone.utc)
     )
 
-    total_amount = Column(Float, nullable=False)
-
+    total_amount = Column(Numeric(10, 2), nullable=False)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
+    )
+
+    user = relationship(
+        "User",
+        back_populates="sales"
+    )
+
+    sale_items = relationship(
+        "SaleItem",
+        back_populates="sale",
+        cascade="all, delete-orphan"
     )

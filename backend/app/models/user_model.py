@@ -16,8 +16,14 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
+    role = relationship("Role")
+
     purchases = relationship(
      "Purchase",
      back_populates="user"
     )
-    
+
+    sales = relationship(
+       "Sale",
+        back_populates="user"
+    )

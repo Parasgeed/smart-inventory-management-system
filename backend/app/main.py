@@ -23,19 +23,35 @@ from app.routes.category_routes import router as category_router
 
 from app.routes.purchase_routes import router as purchase_router
 
+from app.routes.sale_routes import router as sale_router
 
-Base.metadata.create_all(bind=engine)
+from app.routes.dashboard_routes import router as dashboard_router
+
+from app.routes.report_routes import router as report_router
+
+from app.routes.inventory_log_routes import router as inventory_log_router
+
+from app.routes.settings_routes import router as settings_router
+
+from fastapi import FastAPI, APIRouter
 
 app = FastAPI()
 
-app.include_router(auth_router)
-app.include_router(product_router)
-app.include_router(supplier_router)
-app.include_router(category_router)
+api_router = APIRouter(prefix="/api/v1")
 
-app.include_router(purchase_router)
+api_router.include_router(auth_router)
+api_router.include_router(product_router)
+api_router.include_router(supplier_router)
+api_router.include_router(category_router)
 
+api_router.include_router(purchase_router)
+api_router.include_router(sale_router)  # Include the sales router
+api_router.include_router(dashboard_router)    
+api_router.include_router(report_router)
+api_router.include_router(inventory_log_router)
+api_router.include_router(settings_router)
 
+app.include_router(api_router)
 
 @app.get("/")
 def home():

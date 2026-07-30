@@ -8,7 +8,14 @@ from app.models.product_model import Product
 from app.schemas.product_schema import (
     ProductCreate,
     ProductUpdate,
-    ProductResponse
+    ProductResponse,
+    ProductAdjustStock
+)
+
+from app.services.inventory_service import (
+    adjust_stock,
+    InsufficientStockError,
+    ProductNotFoundError
 )
 
 from app.auth.dependencies import get_current_user
@@ -45,14 +52,14 @@ def create_product(product: ProductCreate,
 
     return new_product 
     
-@router.get("/" , response_model = list[ProductResponse])
+@router.get("/", response_model=list[ProductResponse])
 def get_products(
-        db: Session = Depends(get_db),
-        current_user =Depends(get_current_user)
-    ):
-
-    products = db.query(Product).all()
-    return products
+    skip: int = 0,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return db.query(Product).offset(skip).limit(limit).all()
 
 @router.get("/{product_id}", response_model = ProductResponse)
 def get_product(
@@ -95,6 +102,10 @@ def update_product(
         exclude_unset=True
     )
 
+    # Enforce quantity rules: ignore direct stock modifications via general product update
+    if "quantity" in update_data:
+        del update_data["quantity"]
+
     for key, value in update_data.items():
         setattr(product, key, value)
 
@@ -102,6 +113,37 @@ def update_product(
     db.refresh(product)
     
     return product
+
+
+@router.post("/{product_id}/adjust", response_model=ProductResponse)
+def adjust_product_stock(
+    product_id: int,
+    adjustment: ProductAdjustStock,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    admin_required(current_user)
+
+    try:
+        product = adjust_stock(
+            db=db,
+            product_id=product_id,
+            quantity_changed=adjustment.quantity_changed,
+            change_type=adjustment.change_type,
+            reference_type="manual",
+            reference_id=0,  # 0 for manual adjustments
+            performed_by=current_user.id
+        )
+        db.commit()
+        db.refresh(product)
+        return product
+    except ProductNotFoundError as e:
+        db.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except InsufficientStockError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.delete("/{product_id}")
 def delete_product(
