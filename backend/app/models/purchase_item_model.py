@@ -27,7 +27,9 @@ class PurchaseItem(Base):
         nullable=False
     )
 
-    quantity = Column(Integer, nullable=False)
+    ordered_quantity = Column(Integer, nullable=False)
+    received_quantity = Column(Integer, default=0, nullable=False)
+    remaining_quantity = Column(Integer, nullable=False)
 
     unit_price = Column(Numeric(10, 2), nullable=False)
 

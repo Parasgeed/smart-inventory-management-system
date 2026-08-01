@@ -24,6 +24,6 @@ class User(Base):
     )
 
     sales = relationship(
-       "Sale",
+        "SalesOrder",
         back_populates="user"
     )

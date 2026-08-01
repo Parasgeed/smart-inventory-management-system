@@ -2,10 +2,13 @@ from pydantic import BaseModel, Field, ConfigDict
 from decimal import Decimal
 from typing import List
 from enum import Enum
+from datetime import datetime
 
 
 class PurchaseStatus(str, Enum):
-    PENDING = "PENDING"
+    DRAFT = "DRAFT"
+    ISSUED = "ISSUED"
+    PARTIALLY_RECEIVED = "PARTIALLY_RECEIVED"
     RECEIVED = "RECEIVED"
     CANCELLED = "CANCELLED"
 
@@ -17,7 +20,7 @@ class PurchaseStatusUpdate(BaseModel):
 class PurchaseItemCreate(BaseModel):
     product_id: int
 
-    quantity: int = Field(gt=0)
+    ordered_quantity: int = Field(gt=0)
 
     unit_price: Decimal = Field(
         gt=0,
@@ -25,8 +28,6 @@ class PurchaseItemCreate(BaseModel):
         decimal_places=2
     )
 
-
-from datetime import datetime
 
 class PurchaseCreate(BaseModel):
     supplier_id: int
@@ -45,7 +46,9 @@ class PurchaseCreate(BaseModel):
 class PurchaseItemResponse(BaseModel):
     id: int
     product_id: int
-    quantity: int
+    ordered_quantity: int
+    received_quantity: int
+    remaining_quantity: int
     unit_price: Decimal
     subtotal: Decimal
 
@@ -65,9 +68,18 @@ class PurchaseResponse(BaseModel):
     payment_terms: str | None
     delivery_address: str | None
     total_amount: Decimal
-    status: str
+    status: PurchaseStatus
     notes: str | None
 
     purchase_items: List[PurchaseItemResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ReceiveItemRequest(BaseModel):
+    product_id: int
+    quantity_received: int = Field(gt=0)
+
+
+class PurchaseReceiveRequest(BaseModel):
+    items: List[ReceiveItemRequest]

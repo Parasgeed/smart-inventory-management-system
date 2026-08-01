@@ -9,8 +9,8 @@ from app.database.database import get_db
 from app.models.product_model import Product
 from app.models.purchase_model import Purchase
 from app.models.purchase_item_model import PurchaseItem
-from app.models.sale_model import Sale
-from app.models.sale_item_model import SaleItem
+from app.models.sales_order_model import SalesOrder
+from app.models.sales_order_item_model import SalesOrderItem
 from app.models.supplier_model import Supplier
 from app.models.category_model import Category
 
@@ -50,9 +50,9 @@ def get_dashboard_summary(
     )
 
     today_sales_total = db.query(
-        func.sum(Sale.total_amount)
+        func.sum(SalesOrder.total_amount)
     ).filter(
-        Sale.sale_date >= today_start
+        SalesOrder.sale_date >= today_start
     ).scalar() or Decimal("0")
 
     return DashboardSummaryResponse(
@@ -64,8 +64,8 @@ def get_dashboard_summary(
         ).count(),
         total_inventory_value=_inventory_value(db),
         today_sales_total=today_sales_total,
-        today_sales_count=db.query(Sale).filter(
-            Sale.sale_date >= today_start
+        today_sales_count=db.query(SalesOrder).filter(
+            SalesOrder.sale_date >= today_start
         ).count()
     )
 
@@ -84,8 +84,8 @@ def get_dashboard_activity(
     )
 
     recent_sales = (
-        db.query(Sale)
-        .order_by(Sale.sale_date.desc())
+        db.query(SalesOrder)
+        .order_by(SalesOrder.sale_date.desc())
         .limit(limit)
         .all()
     )
@@ -159,12 +159,12 @@ def get_top_selling_products(
         db.query(
             Product.id,
             Product.name,
-            func.sum(SaleItem.quantity).label("total_quantity_sold"),
-            func.sum(SaleItem.subtotal).label("total_revenue")
+            func.sum(SalesOrderItem.quantity).label("total_quantity_sold"),
+            func.sum(SalesOrderItem.subtotal).label("total_revenue")
         )
-        .join(SaleItem, SaleItem.product_id == Product.id)
+        .join(SalesOrderItem, SalesOrderItem.product_id == Product.id)
         .group_by(Product.id, Product.name)
-        .order_by(func.sum(SaleItem.quantity).desc())
+        .order_by(func.sum(SalesOrderItem.quantity).desc())
         .limit(limit)
         .all()
     )
@@ -215,13 +215,13 @@ def get_monthly_sales(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    month_expr = func.to_char(Sale.sale_date, "YYYY-MM")
+    month_expr = func.to_char(SalesOrder.sale_date, "YYYY-MM")
 
     results = (
         db.query(
             month_expr.label("month"),
-            func.sum(Sale.total_amount).label("total_amount"),
-            func.count(Sale.id).label("count")
+            func.sum(SalesOrder.total_amount).label("total_amount"),
+            func.count(SalesOrder.id).label("count")
         )
         .group_by(month_expr)
         .order_by(month_expr.desc())
@@ -309,11 +309,11 @@ def get_dead_stock(
     # We use a LEFT JOIN so products with zero sales still appear as NULL.
     last_sale_subq = (
         db.query(
-            SaleItem.product_id,
-            func.max(Sale.sale_date).label("last_sold_at")
+            SalesOrderItem.product_id,
+            func.max(SalesOrder.sale_date).label("last_sold_at")
         )
-        .join(Sale, SaleItem.sale_id == Sale.id)
-        .group_by(SaleItem.product_id)
+        .join(SalesOrder, SalesOrderItem.sales_order_id == SalesOrder.id)
+        .group_by(SalesOrderItem.product_id)
         .subquery()
     )
 

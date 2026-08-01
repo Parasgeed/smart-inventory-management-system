@@ -10,8 +10,8 @@ import io
 
 from app.database.database import get_db
 
-from app.models.sale_model import Sale
-from app.models.sale_item_model import SaleItem
+from app.models.sales_order_model import SalesOrder
+from app.models.sales_order_item_model import SalesOrderItem
 from app.models.purchase_model import Purchase
 from app.models.purchase_item_model import PurchaseItem
 from app.models.product_model import Product
@@ -64,21 +64,21 @@ def _get_sales_report_data(
     db: Session, start_date: date | None, end_date: date | None
 ) -> list[SalesReportItem]:
     query = (
-        db.query(SaleItem, Sale, Product)
-        .join(Sale, SaleItem.sale_id == Sale.id)
-        .join(Product, SaleItem.product_id == Product.id)
+        db.query(SalesOrderItem, SalesOrder, Product)
+        .join(SalesOrder, SalesOrderItem.sales_order_id == SalesOrder.id)
+        .join(Product, SalesOrderItem.product_id == Product.id)
     )
 
     if start_date:
-        query = query.filter(Sale.sale_date >= start_date)
+        query = query.filter(SalesOrder.sale_date >= start_date)
     if end_date:
-        query = query.filter(Sale.sale_date <= end_date)
+        query = query.filter(SalesOrder.sale_date <= end_date)
 
-    results = query.order_by(Sale.sale_date.asc()).all()
+    results = query.order_by(SalesOrder.sale_date.asc()).all()
 
     return [
         SalesReportItem(
-            sale_id=sale.id,
+            sales_order_id=sale.id,
             sale_date=sale.sale_date,
             customer_name=sale.customer_name or "Walk-in Customer",
             payment_method=sale.payment_method or "",
@@ -210,7 +210,7 @@ def export_inventory_report(
 
 
 # ---------- Profit & Loss ----------
-# New sales use SaleItem.cost_price_at_sale so historical profit remains
+# New sales use SalesOrderItem.cost_price_at_sale so historical profit remains
 # correct even if Product.cost_price changes later. Pre-migration sale items
 # may have NULL cost_price_at_sale, so they safely fall back to current cost.
 
@@ -218,17 +218,17 @@ def _get_profit_loss_report_data(
     db: Session, start_date: date | None, end_date: date | None
 ) -> list[ProfitLossReportItem]:
     query = (
-        db.query(SaleItem, Sale, Product)
-        .join(Sale, SaleItem.sale_id == Sale.id)
-        .join(Product, SaleItem.product_id == Product.id)
+        db.query(SalesOrderItem, SalesOrder, Product)
+        .join(SalesOrder, SalesOrderItem.sales_order_id == SalesOrder.id)
+        .join(Product, SalesOrderItem.product_id == Product.id)
     )
 
     if start_date:
-        query = query.filter(Sale.sale_date >= start_date)
+        query = query.filter(SalesOrder.sale_date >= start_date)
     if end_date:
-        query = query.filter(Sale.sale_date <= end_date)
+        query = query.filter(SalesOrder.sale_date <= end_date)
 
-    results = query.order_by(Sale.sale_date.asc()).all()
+    results = query.order_by(SalesOrder.sale_date.asc()).all()
 
     items = []
     for item, sale, product in results:
@@ -254,7 +254,7 @@ def _get_profit_loss_report_data(
 
         items.append(
             ProfitLossReportItem(
-                sale_id=sale.id,
+                sales_order_id=sale.id,
                 sale_date=sale.sale_date,
                 product_id=product.id,
                 product_name=product.name,

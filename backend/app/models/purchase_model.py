@@ -51,7 +51,7 @@ class Purchase(Base):
     payment_terms = Column(String(100), nullable=True)
     delivery_address = Column(String(255), nullable=True)
 
-    status = Column(String(30), default="PENDING")
+    status = Column(String(30), default="DRAFT")
 
     total_amount = Column(Numeric(10, 2), nullable=False)
 

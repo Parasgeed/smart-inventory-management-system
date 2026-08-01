@@ -22,10 +22,13 @@ from app.models.category_model import Category
 from app.models.product_model import Product
 from app.models.purchase_model import Purchase
 from app.models.purchase_item_model import PurchaseItem
-from app.models.sale_model import Sale
-from app.models.sale_item_model import SaleItem
+from app.models.sales_order_model import SalesOrder
+from app.models.sales_order_item_model import SalesOrderItem
+from app.models.package_model import Package
+from app.models.shipment_model import Shipment
 from app.models.inventory_log_model import InventoryLog
 from app.models.system_setting_model import SystemSetting
+from app.models.customer_model import Customer
 
 config = context.config
 db_url = os.getenv("DATABASE_URL")

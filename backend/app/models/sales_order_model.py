@@ -6,15 +6,13 @@ from sqlalchemy import (
     DateTime,
     ForeignKey
 )
-
 from datetime import datetime, timezone
-
 from app.database.database import Base
 from sqlalchemy.orm import relationship
 
 
-class Sale(Base):
-    __tablename__ = "sales"
+class SalesOrder(Base):
+    __tablename__ = "sales_orders"
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -23,9 +21,14 @@ class Sale(Base):
         ForeignKey("users.id"),
         nullable=False
     )
+    
+    customer_id = Column(
+        Integer,
+        ForeignKey("customers.id"),
+        nullable=True
+    )
 
-    customer_name = Column(String(100))
-
+    status = Column(String(30), default="DRAFT", nullable=False)
     payment_method = Column(String(50))
 
     sale_date = Column(
@@ -43,9 +46,20 @@ class Sale(Base):
         "User",
         back_populates="sales"
     )
+    
+    customer = relationship(
+        "Customer",
+        back_populates="sales"
+    )
 
-    sale_items = relationship(
-        "SaleItem",
-        back_populates="sale",
+    sales_order_items = relationship(
+        "SalesOrderItem",
+        back_populates="sales_order",
+        cascade="all, delete-orphan"
+    )
+
+    packages = relationship(
+        "Package",
+        back_populates="sales_order",
         cascade="all, delete-orphan"
     )

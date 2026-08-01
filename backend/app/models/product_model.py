@@ -72,7 +72,7 @@ class Product(Base):
         back_populates="product"
     )
 
-    sale_items = relationship(
-        "SaleItem",
+    sales_order_items = relationship(
+        "SalesOrderItem",
         back_populates="product"
     )
