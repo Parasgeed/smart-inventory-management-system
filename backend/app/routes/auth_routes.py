@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.user_model import User
-from app.schemas.user_schema import UserCreate
+from app.models.role_model import Role
+from app.schemas.user_schema import UserCreate, UserUpdate
 from app.auth.security import hash_password
 
 from app.schemas.user_schema import UserLogin
@@ -130,3 +131,52 @@ def get_all_users(
         }
         for u in users
     ]
+
+@router.get("/roles")
+def get_all_roles(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    admin_required(current_user)
+    roles = db.query(Role).all()
+    return [{"id": r.id, "name": r.name, "description": r.description} for r in roles]
+
+@router.put("/users/{user_id}")
+def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    admin_required(current_user)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user_update.role_id is not None:
+        user.role_id = user_update.role_id
+        
+    if user_update.password is not None:
+        user.password_hash = hash_password(user_update.password)
+        
+    db.commit()
+    return {"message": "User updated successfully"}
+
+@router.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    admin_required(current_user)
+    
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+        
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted successfully"}

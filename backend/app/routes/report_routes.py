@@ -17,6 +17,7 @@ from app.models.purchase_item_model import PurchaseItem
 from app.models.product_model import Product
 from app.models.category_model import Category
 from app.models.inventory_log_model import InventoryLog
+from app.models.invoice_model import Invoice
 
 from app.models.report_schema import (
     SalesReportItem,
@@ -24,7 +25,8 @@ from app.models.report_schema import (
     InventoryReportItem,
     ProfitLossReportItem,
     StockValuationReportItem,
-    AuditTrailReportItem
+    AuditTrailReportItem,
+    InvoiceReportItem
 )
 
 from app.auth.dependencies import get_current_user
@@ -409,3 +411,55 @@ def export_audit_trail_report(
 ):
     items = _get_audit_trail_report_data(db, start_date, end_date)
     return _to_csv(AuditTrailReportItem, items, "audit_trail_report.csv")
+
+
+# ---------- Invoices ----------
+
+def _get_invoices_report_data(
+    db: Session, start_date: date | None, end_date: date | None
+) -> list[InvoiceReportItem]:
+    query = db.query(Invoice)
+
+    if start_date:
+        query = query.filter(Invoice.issue_date >= start_date)
+    if end_date:
+        query = query.filter(Invoice.issue_date <= end_date)
+
+    results = query.order_by(Invoice.issue_date.asc()).all()
+
+    return [
+        InvoiceReportItem(
+            invoice_id=inv.id,
+            invoice_number=inv.invoice_number,
+            issue_date=inv.issue_date,
+            customer_id=inv.customer_id,
+            status=inv.status,
+            subtotal=inv.subtotal,
+            tax_amount=inv.tax_amount,
+            total_amount=inv.total_amount,
+            amount_paid=inv.amount_paid,
+            balance_due=inv.balance_due
+        )
+        for inv in results
+    ]
+
+
+@router.get("/invoices", response_model=list[InvoiceReportItem])
+def get_invoices_report(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return _get_invoices_report_data(db, start_date, end_date)
+
+
+@router.get("/invoices/export")
+def export_invoices_report(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    items = _get_invoices_report_data(db, start_date, end_date)
+    return _to_csv(InvoiceReportItem, items, "invoices_report.csv")

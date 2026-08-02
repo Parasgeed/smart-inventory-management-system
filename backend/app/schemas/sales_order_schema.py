@@ -64,6 +64,16 @@ class PackageResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class InvoiceBasicResponse(BaseModel):
+    id: int
+    invoice_number: str
+    status: str
+    amount_paid: Decimal
+    balance_due: Decimal
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
 class SalesOrderResponse(BaseModel):
     id: int
     user_id: int
@@ -75,6 +85,7 @@ class SalesOrderResponse(BaseModel):
 
     sales_order_items: List[SalesOrderItemResponse] = []
     packages: List[PackageResponse] = []
+    invoice: Optional[InvoiceBasicResponse] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
@@ -31,3 +32,11 @@ class UserResponse(BaseModel):
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserUpdate(BaseModel):
+    role_id: Optional[int] = None
+    password: Optional[str] = Field(
+        default=None,
+        min_length=8,
+        max_length=100
+    )

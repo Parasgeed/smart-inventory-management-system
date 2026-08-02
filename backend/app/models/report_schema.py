@@ -75,3 +75,16 @@ class AuditTrailReportItem(BaseModel):
     quantity_changed: int
     previous_quantity: int
     new_quantity: int
+
+
+class InvoiceReportItem(BaseModel):
+    invoice_id: int
+    invoice_number: str
+    issue_date: datetime
+    customer_id: int | None
+    status: str
+    subtotal: Decimal
+    tax_amount: Decimal
+    total_amount: Decimal
+    amount_paid: Decimal
+    balance_due: Decimal

@@ -37,6 +37,9 @@ from app.routes.settings_routes import router as settings_router
 
 from fastapi import FastAPI, APIRouter
 
+from app.routes.invoice_routes import router as invoice_router
+from app.routes.payment_routes import router as payment_router
+
 app = FastAPI()
 
 api_router = APIRouter(prefix="/api/v1")
@@ -49,6 +52,8 @@ api_router.include_router(category_router)
 api_router.include_router(purchase_router)
 api_router.include_router(sales_order_router)  # Include the sales order router
 api_router.include_router(customer_router)
+api_router.include_router(invoice_router)
+api_router.include_router(payment_router)
 api_router.include_router(dashboard_router)    
 api_router.include_router(report_router)
 api_router.include_router(inventory_log_router)

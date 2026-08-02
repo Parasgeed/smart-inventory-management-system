@@ -63,3 +63,10 @@ class SalesOrder(Base):
         back_populates="sales_order",
         cascade="all, delete-orphan"
     )
+
+    invoice = relationship(
+        "Invoice",
+        back_populates="sales_order",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
