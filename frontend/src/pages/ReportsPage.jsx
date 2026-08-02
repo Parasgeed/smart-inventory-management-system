@@ -16,7 +16,7 @@ function ReportsPage() {
     fetchReportData();
   }, [activeTab]);
 
-  const fetchReportData = async () => {
+  async function fetchReportData() {
     setLoading(true);
     setError('');
     setData([]);

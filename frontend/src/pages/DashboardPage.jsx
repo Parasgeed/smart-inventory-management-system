@@ -99,14 +99,14 @@ function DashboardPage() {
         
         <div className="bg-canvas-light p-6 rounded-lg border border-hairline-light shadow-[0_8px_8px_rgba(0,0,0,0.03),_0_4px_4px_rgba(0,0,0,0.03),_0_2px_2px_rgba(0,0,0,0.03),_0_0_0_1px_rgba(0,0,0,0.03)] hover:translate-y-[-2px] transition-all duration-300 overflow-hidden">
           <span className="text-caption text-shade-50 font-semibold block truncate">Inventory Net Value</span>
-          <span className="text-2xl md:text-3xl font-display font-light text-ink block mt-2 font-mono truncate" title={`₹${Number(summary?.total_inventory_value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₹{Number(summary?.total_inventory_value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span className="text-xl lg:text-2xl xl:text-3xl font-display font-light text-ink block mt-2 font-mono truncate" title={`₹${Number(summary?.total_inventory_value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₹{Number(summary?.total_inventory_value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           <span className="text-micro text-shade-40 block mt-1 truncate">Valued across {summary?.total_products} items</span>
         </div>
 
-        <div className="bg-canvas-light p-6 rounded-lg border border-hairline-light shadow-[0_8px_8px_rgba(0,0,0,0.03),_0_4px_4px_rgba(0,0,0,0.03),_0_2px_2px_rgba(0,0,0,0.03),_0_0_0_1px_rgba(0,0,0,0.03)] hover:translate-y-[-2px] transition-all duration-300">
-          <span className="text-caption text-shade-50 font-semibold block">Today's Sales Revenue</span>
-          <span className="text-3xl font-display font-light text-green-700 block mt-2 font-mono">₹{Number(summary?.today_sales_total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          <span className="text-micro text-shade-40 block mt-1">{summary?.today_sales_count} invoices cleared today</span>
+        <div className="bg-canvas-light p-6 rounded-lg border border-hairline-light shadow-[0_8px_8px_rgba(0,0,0,0.03),_0_4px_4px_rgba(0,0,0,0.03),_0_2px_2px_rgba(0,0,0,0.03),_0_0_0_1px_rgba(0,0,0,0.03)] hover:translate-y-[-2px] transition-all duration-300 overflow-hidden">
+          <span className="text-caption text-shade-50 font-semibold block truncate">Today's Sales Revenue</span>
+          <span className="text-xl lg:text-2xl xl:text-3xl font-display font-light text-green-700 block mt-2 font-mono truncate" title={`₹${Number(summary?.today_sales_total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₹{Number(summary?.today_sales_total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span className="text-micro text-shade-40 block mt-1 truncate">{summary?.today_sales_count} invoices cleared today</span>
         </div>
 
         <div 

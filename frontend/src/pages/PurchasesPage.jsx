@@ -16,6 +16,9 @@ function PurchasesPage() {
   // Selected detail
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
+  // Status Confirm Modal
+  const [confirmModal, setConfirmModal] = useState({ open: false, purchaseId: null, newStatus: '' });
+
   // Modal State
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [form, setForm] = useState({
@@ -96,12 +99,17 @@ function PurchasesPage() {
     });
   };
 
-  const updatePurchaseStatus = async (purchaseId, newStatus) => {
-    if (!window.confirm(`Are you sure you want to mark this purchase as ${newStatus}?`)) return;
+  const updatePurchaseStatus = (purchaseId, newStatus) => {
+    setConfirmModal({ open: true, purchaseId, newStatus });
+  };
+
+  const handleConfirmAction = async () => {
+    const { purchaseId, newStatus } = confirmModal;
     try {
       const response = await client.patch(`/purchases/${purchaseId}/status`, { status: newStatus });
       setSelectedPurchase(response.data);
       fetchData();
+      setConfirmModal({ open: false, purchaseId: null, newStatus: '' });
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.detail || 'Failed to update purchase status.');
@@ -223,7 +231,7 @@ function PurchasesPage() {
         </button>
       </div>
 
-      <div className={`grid gap-6 transition-all duration-300 ${selectedPurchase ? 'grid-cols-1 lg:grid-cols-[1fr_400px]' : 'grid-cols-1'}`}>
+      <div className="grid gap-6 grid-cols-1">
         
         {/* Table List Card */}
         <div className="bg-canvas-light rounded-lg border border-hairline-light p-6 shadow-[0_8px_8px_rgba(0,0,0,0.02),_0_0_0_1px_rgba(0,0,0,0.02)]">
@@ -314,8 +322,9 @@ function PurchasesPage() {
 
         {/* Purchase Detail Panel */}
         {selectedPurchase && (
-          <div className="bg-canvas-light rounded-lg border border-hairline-light p-6 shadow-[0_8px_8px_rgba(0,0,0,0.05),_0_0_0_1px_rgba(0,0,0,0.05)] h-fit animate-slideLeft">
-            <div className="flex justify-between items-start border-b border-hairline-light pb-4 mb-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex justify-end z-40">
+            <div className="w-full max-w-lg bg-canvas-light h-full shadow-2xl border-l border-hairline-light p-6 overflow-y-auto animate-slideLeft">
+              <div className="flex justify-between items-start border-b border-hairline-light pb-4 mb-4">
               <div>
                 <h3 className="font-display text-heading-md font-semibold text-ink">{selectedPurchase.po_number || `PO-${selectedPurchase.id.toString().padStart(5, '0')}`}</h3>
                 <p className="text-micro text-shade-50 font-mono mt-0.5">Logged by User #{selectedPurchase.user_id}</p>
@@ -436,6 +445,7 @@ function PurchasesPage() {
                 </div>
               )}
             </div>
+          </div>
           </div>
         )}
       </div>
@@ -668,6 +678,20 @@ function PurchasesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.open && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-canvas-light rounded-lg border border-hairline-light max-w-sm w-full p-6 shadow-xl space-y-6">
+            <h3 className="font-display text-heading-md font-semibold text-ink">Confirm Action</h3>
+            <p className="text-body-md text-shade-60">Are you sure you want to mark this order as <strong className="text-ink">{confirmModal.newStatus}</strong>?</p>
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={() => setConfirmModal({ open: false, purchaseId: null, newStatus: '' })} className="px-4 py-2 rounded-full border border-hairline-light text-ink hover:bg-canvas-cream/50 cursor-pointer">Cancel</button>
+              <button onClick={handleConfirmAction} className={`px-4 py-2 rounded-full font-semibold cursor-pointer text-white ${confirmModal.newStatus === 'CANCELLED' ? 'bg-red-600 hover:bg-red-700' : 'bg-primary hover:bg-shade-70'}`}>Yes, Confirm</button>
+            </div>
           </div>
         </div>
       )}

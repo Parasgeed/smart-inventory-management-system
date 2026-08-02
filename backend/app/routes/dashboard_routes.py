@@ -108,7 +108,7 @@ def get_dashboard_activity(
             DashboardActivityItem(
                 type="sale",
                 id=s.id,
-                reference=s.customer_name or "Walk-in Customer",
+                reference=s.customer.name if s.customer else "Walk-in Customer",
                 amount=s.total_amount,
                 date=s.sale_date
             )

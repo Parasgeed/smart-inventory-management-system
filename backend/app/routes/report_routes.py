@@ -78,9 +78,9 @@ def _get_sales_report_data(
 
     return [
         SalesReportItem(
-            sales_order_id=sale.id,
+            sale_id=sale.id,
             sale_date=sale.sale_date,
-            customer_name=sale.customer_name or "Walk-in Customer",
+            customer_name=sale.customer.name if sale.customer else "Walk-in Customer",
             payment_method=sale.payment_method or "",
             product_id=product.id,
             product_name=product.name,
@@ -140,7 +140,7 @@ def _get_purchases_report_data(
             status=purchase.status,
             product_id=product.id,
             product_name=product.name,
-            quantity=item.quantity,
+            quantity=item.ordered_quantity,
             unit_price=item.unit_price,
             subtotal=item.subtotal,
             purchase_total_amount=purchase.total_amount
@@ -254,7 +254,7 @@ def _get_profit_loss_report_data(
 
         items.append(
             ProfitLossReportItem(
-                sales_order_id=sale.id,
+                sale_id=sale.id,
                 sale_date=sale.sale_date,
                 product_id=product.id,
                 product_name=product.name,

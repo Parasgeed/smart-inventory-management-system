@@ -439,7 +439,7 @@ function ProductsPage() {
       </div>
 
       {/* Main Container: Table + Details Drawer */}
-      <div className={`grid gap-6 transition-all duration-300 ${selectedProduct ? 'grid-cols-1 lg:grid-cols-[1fr_380px]' : 'grid-cols-1'}`}>
+      <div className="grid gap-6 grid-cols-1">
         
         {/* Table Side */}
         <div className="bg-canvas-light rounded-lg border border-hairline-light p-6 shadow-[0_8px_8px_rgba(0,0,0,0.02),_0_4px_4px_rgba(0,0,0,0.02),_0_0_0_1px_rgba(0,0,0,0.02)]">
@@ -610,8 +610,9 @@ function ProductsPage() {
 
         {/* Drawer Side: Product Detail */}
         {selectedProduct && (
-          <div className="bg-canvas-light rounded-lg border border-hairline-light p-6 shadow-[0_8px_8px_rgba(0,0,0,0.05),_0_0_0_1px_rgba(0,0,0,0.05)] h-fit animate-slideLeft">
-            <div className="flex justify-between items-start border-b border-hairline-light pb-4 mb-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex justify-end z-40">
+            <div className="w-full max-w-lg bg-canvas-light h-full shadow-2xl border-l border-hairline-light p-6 overflow-y-auto animate-slideLeft">
+              <div className="flex justify-between items-start border-b border-hairline-light pb-4 mb-4">
               <div>
                 <h3 className="font-display text-heading-md font-semibold text-ink">{selectedProduct.name}</h3>
                 <p className="text-micro text-shade-50 font-mono mt-0.5">ID: #{selectedProduct.id}</p>
@@ -704,6 +705,7 @@ function ProductsPage() {
                 )}
               </div>
             </div>
+          </div>
           </div>
         )}
       </div>
