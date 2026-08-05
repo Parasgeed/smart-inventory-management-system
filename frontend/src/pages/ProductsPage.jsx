@@ -241,7 +241,10 @@ function ProductsPage() {
     }
 
     const payload = {
-      ...form,
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      sku: form.sku.trim(),
+      barcode: form.barcode.trim() || null,
       quantity: Math.max(0, Number(form.quantity)),
       cost_price: cost,
       selling_price: selling,

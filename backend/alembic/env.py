@@ -31,6 +31,7 @@ from app.models.system_setting_model import SystemSetting
 from app.models.customer_model import Customer
 from app.models.invoice_model import Invoice, InvoiceItem
 from app.models.payment_model import Payment
+from app.models.notification_model import Notification
 
 config = context.config
 db_url = os.getenv("DATABASE_URL")

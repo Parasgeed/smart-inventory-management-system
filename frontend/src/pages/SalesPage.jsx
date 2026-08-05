@@ -463,6 +463,29 @@ function SalesPage() {
                       Ship Order (Deduct Stock)
                     </button>
                   )}
+                  {selectedSale.status === 'SHIPPED' && !selectedSale.invoice && (
+                    <button 
+                      onClick={async () => {
+                        try {
+                          const res = await client.post('/invoices/', { sales_order_id: selectedSale.id });
+                          window.location.href = `/invoices/${res.data.id}`;
+                        } catch (err) {
+                          alert(err.response?.data?.detail || 'Failed to generate invoice');
+                        }
+                      }}
+                      className="w-full py-3 bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold rounded-pill transition-colors cursor-pointer border border-blue-300"
+                    >
+                      Generate Invoice
+                    </button>
+                  )}
+                  {selectedSale.invoice && (
+                    <a 
+                      href={`/invoices/${selectedSale.invoice.id}`}
+                      className="w-full py-3 bg-shade-10 hover:bg-shade-20 text-ink font-semibold rounded-pill transition-colors cursor-pointer text-center block border border-shade-30"
+                    >
+                      View Invoice ({selectedSale.invoice.status})
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

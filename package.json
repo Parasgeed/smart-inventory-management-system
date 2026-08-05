@@ -1,0 +1,23 @@
+{
+  "name": "smart-inventory-management-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Parasgeed/smart-inventory-management-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Parasgeed/smart-inventory-management-system/issues"
+  },
+  "homepage": "https://github.com/Parasgeed/smart-inventory-management-system#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.1.2"
+  }
+}

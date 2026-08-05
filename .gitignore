@@ -10,6 +10,10 @@ frontend/dist/
 # Python
 *.pyc
 __pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
 
 # Environment
 .env
@@ -20,3 +24,16 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.playwright-mcp/
+
+# Temporary files
+test_api*.py
+*.png

@@ -33,3 +33,15 @@ class PaymentResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class RazorpayOrderRequest(BaseModel):
+    invoice_id: int
+    amount: Decimal = Field(gt=0, max_digits=10, decimal_places=2)
+
+
+class RazorpayVerifyRequest(BaseModel):
+    invoice_id: int
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str

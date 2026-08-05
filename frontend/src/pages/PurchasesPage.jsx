@@ -1,5 +1,6 @@
 // frontend/src/pages/PurchasesPage.jsx
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import client from '../api/client';
 
 function PurchasesPage() {
@@ -37,9 +38,27 @@ function PurchasesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
+  const location = useLocation();
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (products.length > 0 && location.state?.action === 'restock' && location.state?.productId) {
+      const prod = products.find(p => p.id === location.state.productId);
+      if (prod) {
+        setCreateModalOpen(true);
+        setForm(prev => ({
+          ...prev,
+          supplier_id: prod.supplier_id || '',
+          items: [{ product_id: prod.id, quantity: 1, unit_price: prod.cost_price || 0 }]
+        }));
+        // Clean up location state to prevent re-opening on refresh
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, products]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -116,6 +135,26 @@ function PurchasesPage() {
     }
   };
 
+  const handleReceivePurchase = async (purchase) => {
+    try {
+      const itemsToReceive = purchase.purchase_items
+        .filter(item => item.remaining_quantity > 0)
+        .map(item => ({
+          product_id: item.product_id,
+          quantity_received: item.remaining_quantity
+        }));
+      
+      if (itemsToReceive.length === 0) return;
+
+      const response = await client.post(`/purchases/${purchase.id}/receive`, { items: itemsToReceive });
+      setSelectedPurchase(response.data);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.detail || 'Failed to receive purchase items.');
+    }
+  };
+
   // Calculate total amount in form
   const getFormTotal = () => {
     const subtotal = form.items.reduce((sum, item) => {
@@ -173,7 +212,7 @@ function PurchasesPage() {
       notes: form.notes.trim() || null,
       items: form.items.map(item => ({
         product_id: Number(item.product_id),
-        quantity: Number(item.quantity),
+        ordered_quantity: Number(item.quantity),
         unit_price: Number(item.unit_price)
       }))
     };
@@ -250,7 +289,9 @@ function PurchasesPage() {
               className="px-4 py-2 bg-canvas-light border border-hairline-light rounded-md text-ink text-body-md focus:outline-none focus:ring-1 focus:ring-ink min-w-[160px]"
             >
               <option value="">All Statuses</option>
-              <option value="PENDING">PENDING</option>
+              <option value="DRAFT">DRAFT</option>
+              <option value="ISSUED">ISSUED</option>
+              <option value="PARTIALLY_RECEIVED">PARTIALLY_RECEIVED</option>
               <option value="RECEIVED">RECEIVED</option>
               <option value="CANCELLED">CANCELLED</option>
             </select>
@@ -282,35 +323,28 @@ function PurchasesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-hairline-light text-body-md text-ink">
-                  {filteredPurchases.map(purchase => {
-                    const status = purchase.status;
+                  {filteredPurchases.map(p => {
                     return (
                       <tr 
-                        key={purchase.id}
-                        onClick={() => handleRowClick(purchase)}
-                        className={`hover:bg-canvas-cream/40 cursor-pointer transition-all duration-150 ${selectedPurchase?.id === purchase.id ? 'bg-canvas-cream/70' : ''}`}
+                        key={p.id}
+                        onClick={() => handleRowClick(p)}
+                        className={`hover:bg-canvas-cream/40 cursor-pointer transition-all duration-150 ${selectedPurchase?.id === p.id ? 'bg-canvas-cream/70' : ''}`}
                       >
-                        <td className="py-4 px-4 font-mono font-semibold text-ink">{purchase.po_number || `PO-${purchase.id.toString().padStart(5, '0')}`}</td>
-                        <td className="py-4 px-4 font-medium">{getSupplierName(purchase.supplier_id)}</td>
-                        <td className="py-4 px-4 text-shade-60">{new Date(purchase.order_date || purchase.purchase_date || purchase.created_at).toLocaleDateString()}</td>
+                        <td className="py-4 px-4 font-mono font-semibold text-ink">{p.po_number || `PO-${p.id.toString().padStart(5, '0')}`}</td>
+                        <td className="py-4 px-4 font-medium">{getSupplierName(p.supplier_id)}</td>
+                        <td className="py-4 px-4 text-shade-60">{new Date(p.order_date || p.purchase_date || p.created_at).toLocaleDateString()}</td>
                         <td className="py-4 px-4 text-center">
-                          {status === 'PENDING' && (
-                            <span className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-pistachio-10 text-ink">
-                              PENDING
-                            </span>
-                          )}
-                          {status === 'RECEIVED' && (
-                            <span className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-aloe-10 text-ink">
-                              RECEIVED
-                            </span>
-                          )}
-                          {status === 'CANCELLED' && (
-                            <span className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-red-50 text-red-600 border border-red-100">
-                              CANCELLED
-                            </span>
-                          )}
+                          <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${
+                            p.status === 'DRAFT' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                            p.status === 'ISSUED' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                            p.status === 'PARTIALLY_RECEIVED' ? 'bg-pistachio-10 text-ink border border-pistachio-30' :
+                            p.status === 'RECEIVED' ? 'bg-aloe-10 text-ink border border-aloe-30' :
+                            'bg-red-50 text-red-600 border border-red-200'
+                          }`}>
+                            {p.status}
+                          </span>
                         </td>
-                        <td className="py-4 px-4 text-right font-mono font-semibold">₹{Number(purchase.total_amount).toFixed(2)}</td>
+                        <td className="py-4 px-4 text-right font-mono font-semibold">₹{Number(p.total_amount).toFixed(2)}</td>
                       </tr>
                     );
                   })}
@@ -347,7 +381,13 @@ function PurchasesPage() {
                 <span className="text-caption text-shade-50 block font-semibold">Date & Status</span>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-shade-60">{new Date(selectedPurchase.order_date || selectedPurchase.purchase_date).toLocaleDateString()}</span>
-                  <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${selectedPurchase.status === 'PENDING' ? 'bg-pistachio-10 text-ink' : selectedPurchase.status === 'RECEIVED' ? 'bg-aloe-10 text-ink' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                  <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${
+                    selectedPurchase.status === 'DRAFT' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    selectedPurchase.status === 'ISSUED' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                    selectedPurchase.status === 'PARTIALLY_RECEIVED' ? 'bg-pistachio-10 text-ink border border-pistachio-30' :
+                    selectedPurchase.status === 'RECEIVED' ? 'bg-aloe-10 text-ink border border-aloe-30' :
+                    'bg-red-50 text-red-600 border border-red-200'
+                  }`}>
                     {selectedPurchase.status}
                   </span>
                 </div>
@@ -428,11 +468,27 @@ function PurchasesPage() {
               </div>
 
               {/* Status Actions */}
-              {selectedPurchase.status === 'PENDING' && (
+              {selectedPurchase.status === 'DRAFT' && (
                 <div className="flex gap-3 border-t border-hairline-light pt-4 mt-6">
                   <button 
-                    onClick={() => updatePurchaseStatus(selectedPurchase.id, 'RECEIVED')}
+                    onClick={() => updatePurchaseStatus(selectedPurchase.id, 'ISSUED')}
                     className="flex-1 py-2 text-center text-body-md font-semibold bg-primary hover:bg-shade-70 text-on-primary rounded-full transition-all duration-200 cursor-pointer"
+                  >
+                    Issue PO
+                  </button>
+                  <button 
+                    onClick={() => updatePurchaseStatus(selectedPurchase.id, 'CANCELLED')}
+                    className="flex-1 py-2 text-center text-body-md font-semibold border border-red-200 text-red-600 hover:bg-red-50 rounded-full transition-all duration-200 cursor-pointer"
+                  >
+                    Cancel Order
+                  </button>
+                </div>
+              )}
+              {(selectedPurchase.status === 'ISSUED' || selectedPurchase.status === 'PARTIALLY_RECEIVED') && (
+                <div className="flex gap-3 border-t border-hairline-light pt-4 mt-6">
+                  <button 
+                    onClick={() => handleReceivePurchase(selectedPurchase)}
+                    className="flex-1 py-2 text-center text-body-md font-semibold bg-aloe-50 hover:bg-aloe-60 text-ink rounded-full transition-all duration-200 cursor-pointer"
                   >
                     Receive Stock
                   </button>

@@ -13,6 +13,9 @@ from app.models.sales_order_model import SalesOrder
 from app.models.sales_order_item_model import SalesOrderItem
 from app.models.inventory_log_model import InventoryLog
 from app.models.customer_model import Customer
+from app.models.sales_return_model import SalesReturn, SalesReturnItem
+from app.models.purchase_return_model import PurchaseReturn, PurchaseReturnItem
+from app.models.notification_model import Notification
 
 from app.routes.auth_routes import router as auth_router
 
@@ -39,6 +42,10 @@ from fastapi import FastAPI, APIRouter
 
 from app.routes.invoice_routes import router as invoice_router
 from app.routes.payment_routes import router as payment_router
+from app.routes.sales_return_routes import router as sales_return_router
+from app.routes.purchase_return_routes import router as purchase_return_router
+from app.routes.search_routes import router as search_router
+from app.routes.notification_routes import router as notification_router
 
 app = FastAPI()
 
@@ -50,14 +57,18 @@ api_router.include_router(supplier_router)
 api_router.include_router(category_router)
 
 api_router.include_router(purchase_router)
+api_router.include_router(purchase_return_router)
 api_router.include_router(sales_order_router)  # Include the sales order router
 api_router.include_router(customer_router)
 api_router.include_router(invoice_router)
 api_router.include_router(payment_router)
+api_router.include_router(sales_return_router)
+api_router.include_router(search_router)
 api_router.include_router(dashboard_router)    
 api_router.include_router(report_router)
 api_router.include_router(inventory_log_router)
 api_router.include_router(settings_router)
+api_router.include_router(notification_router)
 
 app.include_router(api_router)
 

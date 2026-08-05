@@ -7,6 +7,7 @@ from app.models.invoice_model import Invoice, InvoiceItem
 from app.models.sales_order_model import SalesOrder
 from app.schemas.invoice_schema import InvoiceStatus, InvoiceGenerateRequest
 from app.schemas.sales_order_schema import SalesOrderStatus
+from app.services.notification_service import create_notification_for_all_users
 
 
 class InvoiceService:
@@ -76,6 +77,15 @@ class InvoiceService:
 
         db.commit()
         db.refresh(invoice)
+
+        create_notification_for_all_users(
+            db=db,
+            type="INVOICE_CREATED",
+            title="Invoice Created",
+            message=f"Invoice {invoice.invoice_number} has been created for Sales Order #{so.id}.",
+            reference_id=invoice.id
+        )
+        db.commit()
         return invoice
 
     @staticmethod

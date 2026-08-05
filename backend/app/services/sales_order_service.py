@@ -14,6 +14,7 @@ from app.schemas.sales_order_schema import (
     ShipmentCreate
 )
 from app.services.inventory_service import adjust_stock
+from app.services.notification_service import create_notification_for_all_users
 
 
 class SalesOrderService:
@@ -74,6 +75,16 @@ class SalesOrderService:
              raise HTTPException(status_code=400, detail="Cannot change status back from SHIPPED without a return process.")
              
         order.status = status.value
+        
+        if order.status == SalesOrderStatus.SHIPPED.value:
+            create_notification_for_all_users(
+                db=db,
+                type="SALES_SHIPPED",
+                title="Sales Order Shipped",
+                message=f"Sales order #{order.id} has been shipped.",
+                reference_id=order.id
+            )
+
         db.commit()
         db.refresh(order)
         return order
@@ -137,6 +148,14 @@ class SalesOrderService:
         # 3. Update Package and Order statuses
         package.status = PackageStatus.SHIPPED.value
         order.status = SalesOrderStatus.SHIPPED.value
+
+        create_notification_for_all_users(
+            db=db,
+            type="SALES_SHIPPED",
+            title="Sales Order Shipped",
+            message=f"Sales order #{order.id} (Package: {package.package_number}) has been shipped.",
+            reference_id=order.id
+        )
 
         db.commit()
         db.refresh(shipment)

@@ -12,6 +12,7 @@ function DashboardPage() {
   const [topSelling, setTopSelling] = useState([]);
   const [monthlySales, setMonthlySales] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -36,7 +37,8 @@ function DashboardPage() {
         deadRes,
         topRes,
         monthlyRes,
-        catRes
+        catRes,
+        invRes
       ] = await Promise.all([
         client.get('/dashboard/summary'),
         client.get('/dashboard/activity?limit=6'),
@@ -45,7 +47,8 @@ function DashboardPage() {
         client.get(`/dashboard/dead-stock?days=${deadStockDays}`),
         client.get('/dashboard/top-selling-products?limit=5'),
         client.get('/dashboard/monthly-sales?months=6'),
-        client.get('/dashboard/category-distribution')
+        client.get('/dashboard/category-distribution'),
+        client.get('/invoices/')
       ]);
 
       setSummary(sumRes.data);
@@ -56,6 +59,7 @@ function DashboardPage() {
       setTopSelling(topRes.data);
       setMonthlySales(monthlyRes.data);
       setCategories(catRes.data);
+      setInvoices(invRes.data);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
       setError('Error connecting to analytics database.');
@@ -85,6 +89,10 @@ function DashboardPage() {
   // Custom Monthly Chart Max Value to scale heights
   const maxMonthlySales = Math.max(...monthlySales.map(m => Number(m.total_amount)), 1000);
 
+  // Calculate Invoice Metrics
+  const totalReceivables = invoices.filter(i => i.status !== 'VOID').reduce((sum, i) => sum + Number(i.balance_due), 0);
+  const overdueCount = invoices.filter(i => i.status === 'OVERDUE').length;
+
   return (
     <div className="space-y-8 font-sans">
       
@@ -98,15 +106,15 @@ function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         <div className="bg-canvas-light p-6 rounded-lg border border-hairline-light shadow-[0_8px_8px_rgba(0,0,0,0.03),_0_4px_4px_rgba(0,0,0,0.03),_0_2px_2px_rgba(0,0,0,0.03),_0_0_0_1px_rgba(0,0,0,0.03)] hover:translate-y-[-2px] transition-all duration-300 overflow-hidden">
-          <span className="text-caption text-shade-50 font-semibold block truncate">Inventory Net Value</span>
-          <span className="text-xl lg:text-2xl xl:text-3xl font-display font-light text-ink block mt-2 font-mono truncate" title={`₹${Number(summary?.total_inventory_value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₹{Number(summary?.total_inventory_value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          <span className="text-micro text-shade-40 block mt-1 truncate">Valued across {summary?.total_products} items</span>
+          <span className="text-caption text-shade-50 font-semibold block truncate">Total Receivables</span>
+          <span className="text-xl lg:text-2xl xl:text-3xl font-display font-light text-ink block mt-2 font-mono truncate" title={`₹${totalReceivables.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₹{totalReceivables.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span className="text-micro text-shade-40 block mt-1 truncate">Unpaid invoice balance</span>
         </div>
 
         <div className="bg-canvas-light p-6 rounded-lg border border-hairline-light shadow-[0_8px_8px_rgba(0,0,0,0.03),_0_4px_4px_rgba(0,0,0,0.03),_0_2px_2px_rgba(0,0,0,0.03),_0_0_0_1px_rgba(0,0,0,0.03)] hover:translate-y-[-2px] transition-all duration-300 overflow-hidden">
-          <span className="text-caption text-shade-50 font-semibold block truncate">Today's Sales Revenue</span>
-          <span className="text-xl lg:text-2xl xl:text-3xl font-display font-light text-green-700 block mt-2 font-mono truncate" title={`₹${Number(summary?.today_sales_total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₹{Number(summary?.today_sales_total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          <span className="text-micro text-shade-40 block mt-1 truncate">{summary?.today_sales_count} invoices cleared today</span>
+          <span className="text-caption text-shade-50 font-semibold block truncate">Overdue Invoices</span>
+          <span className="text-xl lg:text-2xl xl:text-3xl font-display font-light text-red-700 block mt-2 font-mono truncate">{overdueCount}</span>
+          <span className="text-micro text-shade-40 block mt-1 truncate">Requires immediate action</span>
         </div>
 
         <div 
@@ -146,9 +154,17 @@ function DashboardPage() {
               </h4>
               <div className="divide-y divide-hairline-light max-h-40 overflow-y-auto pr-1">
                 {outOfStock.slice(0, 4).map(p => (
-                  <div key={p.id} className="py-2 text-sm flex justify-between">
-                    <span className="font-semibold">{p.name}</span>
-                    <span className="font-mono text-shade-50">{p.sku}</span>
+                  <div key={p.id} className="py-2 text-sm flex justify-between items-center group">
+                    <div>
+                      <span className="font-semibold block">{p.name}</span>
+                      <span className="font-mono text-shade-50 text-micro">{p.sku}</span>
+                    </div>
+                    <button 
+                      onClick={() => navigate('/purchases', { state: { action: 'restock', productId: p.id } })}
+                      className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded-full transition-all text-xs cursor-pointer"
+                    >
+                      Restock
+                    </button>
                   </div>
                 ))}
               </div>
@@ -161,12 +177,20 @@ function DashboardPage() {
               </h4>
               <div className="divide-y divide-hairline-light max-h-40 overflow-y-auto pr-1">
                 {lowStock.slice(0, 4).map(p => (
-                  <div key={p.id} className="py-2 text-sm flex justify-between items-center">
+                  <div key={p.id} className="py-2 text-sm flex justify-between items-center group">
                     <div>
                       <span className="font-semibold block">{p.name}</span>
                       <span className="text-micro text-shade-50">Limit: {p.reorder_level}</span>
                     </div>
-                    <span className="font-mono font-semibold bg-pistachio-10 text-ink px-2 py-0.5 rounded-full text-xs">Stock: {p.quantity}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-semibold bg-pistachio-10 text-ink px-2 py-0.5 rounded-full text-xs">Stock: {p.quantity}</span>
+                      <button 
+                        onClick={() => navigate('/purchases', { state: { action: 'restock', productId: p.id } })}
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-primary hover:bg-shade-70 text-on-primary font-semibold rounded-full transition-all text-xs cursor-pointer absolute right-2 md:relative md:right-0"
+                      >
+                        Restock
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

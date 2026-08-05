@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from app.models.product_model import Product
 from app.models.inventory_log_model import InventoryLog
+from app.services.notification_service import create_notification_for_all_users
 
 
 class InsufficientStockError(Exception):
@@ -83,6 +84,24 @@ def adjust_stock(
         )
 
     product.quantity = new_quantity
+
+    # Notifications
+    if new_quantity == 0 and previous_quantity > 0:
+        create_notification_for_all_users(
+            db=db,
+            type="OUT_OF_STOCK",
+            title="Product Out of Stock",
+            message=f"Product '{product.name}' (SKU: {product.sku}) is completely out of stock.",
+            reference_id=product.id
+        )
+    elif new_quantity <= product.reorder_level and previous_quantity > product.reorder_level:
+        create_notification_for_all_users(
+            db=db,
+            type="LOW_STOCK",
+            title="Low Stock Alert",
+            message=f"Product '{product.name}' (SKU: {product.sku}) has reached its reorder level. Current quantity: {new_quantity}.",
+            reference_id=product.id
+        )
 
     log_entry = InventoryLog(
         product_id=product_id,

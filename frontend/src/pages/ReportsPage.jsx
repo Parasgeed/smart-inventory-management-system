@@ -23,10 +23,10 @@ function ReportsPage() {
 
     try {
       const params = {};
-      if (startDate && ['sales', 'purchases', 'profit-loss', 'audit-trail'].includes(activeTab)) {
+      if (startDate && ['sales', 'purchases', 'profit-loss', 'audit-trail', 'invoices'].includes(activeTab)) {
         params.start_date = startDate;
       }
-      if (endDate && ['sales', 'purchases', 'profit-loss', 'audit-trail'].includes(activeTab)) {
+      if (endDate && ['sales', 'purchases', 'profit-loss', 'audit-trail', 'invoices'].includes(activeTab)) {
         params.end_date = endDate;
       }
 
@@ -43,10 +43,10 @@ function ReportsPage() {
   const handleExportCSV = async () => {
     try {
       const params = {};
-      if (startDate && ['sales', 'purchases', 'profit-loss', 'audit-trail'].includes(activeTab)) {
+      if (startDate && ['sales', 'purchases', 'profit-loss', 'audit-trail', 'invoices'].includes(activeTab)) {
         params.start_date = startDate;
       }
-      if (endDate && ['sales', 'purchases', 'profit-loss', 'audit-trail'].includes(activeTab)) {
+      if (endDate && ['sales', 'purchases', 'profit-loss', 'audit-trail', 'invoices'].includes(activeTab)) {
         params.end_date = endDate;
       }
 
@@ -69,7 +69,7 @@ function ReportsPage() {
     }
   };
 
-  const showDateFilters = ['sales', 'purchases', 'profit-loss', 'audit-trail'].includes(activeTab);
+  const showDateFilters = ['sales', 'purchases', 'profit-loss', 'audit-trail', 'invoices'].includes(activeTab);
 
   return (
     <div className="space-y-6 font-sans">
@@ -95,7 +95,8 @@ function ReportsPage() {
           { id: 'inventory', label: 'Inventory Reports' },
           { id: 'profit-loss', label: 'Profit & Loss' },
           { id: 'stock-valuation', label: 'Stock Valuation' },
-          { id: 'audit-trail', label: 'Audit Trail' }
+          { id: 'audit-trail', label: 'Audit Trail' },
+          { id: 'invoices', label: 'Invoices & Receivables' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -336,6 +337,48 @@ function ReportsPage() {
                           {isAddition ? '+' : ''}{row.quantity_changed}
                         </td>
                         <td className="py-3 px-3 text-right font-mono font-semibold">{row.new_quantity}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+
+            {/* Invoices Table */}
+            {activeTab === 'invoices' && (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-hairline-light text-caption font-semibold text-shade-60 bg-canvas-cream/30">
+                    <th className="py-2.5 px-3">Invoice #</th>
+                    <th className="py-2.5 px-3">Issue Date</th>
+                    <th className="py-2.5 px-3">Status</th>
+                    <th className="py-2.5 px-3 text-right">Total Amount</th>
+                    <th className="py-2.5 px-3 text-right">Amount Paid</th>
+                    <th className="py-2.5 px-3 text-right">Balance Due</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-hairline-light text-body-md text-ink">
+                  {data.map((row, index) => {
+                    return (
+                      <tr key={index} className="hover:bg-canvas-cream/20">
+                        <td className="py-3 px-3 font-mono font-semibold text-primary">{row.invoice_number}</td>
+                        <td className="py-3 px-3 text-shade-60 text-xs font-mono">{new Date(row.issue_date).toLocaleDateString()}</td>
+                        <td className="py-3 px-3">
+                          <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
+                            row.status === 'PAID' ? 'bg-success-alpha-10 text-success border border-success-alpha-20' :
+                            row.status === 'PARTIALLY_PAID' ? 'bg-warning-alpha-10 text-warning border border-warning-alpha-20' :
+                            row.status === 'DRAFT' ? 'bg-shade-20 text-shade-70' :
+                            row.status === 'VOID' ? 'bg-shade-40 text-on-primary' :
+                            'bg-secondary-alpha-10 text-secondary border border-secondary-alpha-20'
+                          }`}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right font-mono font-semibold">₹{Number(row.total_amount).toFixed(2)}</td>
+                        <td className="py-3 px-3 text-right font-mono text-green-700">₹{Number(row.amount_paid).toFixed(2)}</td>
+                        <td className={`py-3 px-3 text-right font-mono font-bold ${Number(row.balance_due) > 0 ? 'text-red-700' : 'text-shade-40'}`}>
+                          ₹{Number(row.balance_due).toFixed(2)}
+                        </td>
                       </tr>
                     );
                   })}

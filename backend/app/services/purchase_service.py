@@ -12,6 +12,7 @@ from app.schemas.purchase_schema import (
 from app.services.inventory_service import (
     adjust_stock, ProductNotFoundError, InsufficientStockError
 )
+from app.services.notification_service import create_notification_for_all_users
 
 class PurchaseService:
     @staticmethod
@@ -153,6 +154,13 @@ class PurchaseService:
         all_received = all(item.remaining_quantity == 0 for item in purchase.purchase_items)
         if all_received:
             purchase.status = PurchaseStatus.RECEIVED.value
+            create_notification_for_all_users(
+                db=db,
+                type="PURCHASE_RECEIVED",
+                title="Purchase Order Received",
+                message=f"Purchase order {purchase.po_number} from supplier has been fully received.",
+                reference_id=purchase.id
+            )
         else:
             purchase.status = PurchaseStatus.PARTIALLY_RECEIVED.value
 

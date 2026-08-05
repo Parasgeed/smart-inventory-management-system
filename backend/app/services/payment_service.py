@@ -6,6 +6,7 @@ from app.models.payment_model import Payment
 from app.models.invoice_model import Invoice
 from app.schemas.payment_schema import PaymentCreate
 from app.schemas.invoice_schema import InvoiceStatus
+from app.services.notification_service import create_notification_for_all_users
 
 
 class PaymentService:
@@ -48,6 +49,13 @@ class PaymentService:
         # Automatic Status Logic
         if invoice.balance_due == Decimal("0"):
             invoice.status = InvoiceStatus.PAID.value
+            create_notification_for_all_users(
+                db=db,
+                type="INVOICE_PAID",
+                title="Invoice Paid",
+                message=f"Invoice {invoice.invoice_number} has been fully paid.",
+                reference_id=invoice.id
+            )
         else:
             invoice.status = InvoiceStatus.PARTIALLY_PAID.value
             
