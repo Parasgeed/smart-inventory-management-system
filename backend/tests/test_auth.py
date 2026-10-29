@@ -102,3 +102,49 @@ def test_delete_user():
     # Verify deletion
     users_res = client.get("/api/v1/auth/users", headers={"Authorization": f"Bearer {token}"})
     assert not any(u["id"] == user_id for u in users_res.json())
+
+def test_register_without_role_id_assigns_default_user_role():
+    token = get_admin_token()
+    # Register without role_id
+    res = client.post("/api/v1/auth/register", json={
+        "username": "selfreguser",
+        "email": "selfreg@test.com",
+        "password": "testpassword"
+    })
+    assert res.status_code == 200
+    user_id = res.json()["user_id"]
+
+    users_res = client.get("/api/v1/auth/users", headers={"Authorization": f"Bearer {token}"})
+    user_data = next(u for u in users_res.json() if u["id"] == user_id)
+    assert user_data["role_name"] == "user"
+
+def test_register_duplicate_username_fails():
+    res = client.post("/api/v1/auth/register", json={
+        "username": "admin", # already exists in fixture
+        "email": "anotheradmin@test.com",
+        "password": "testpassword"
+    })
+    assert res.status_code == 400
+    assert "Username already taken" in res.json()["detail"]
+
+def test_register_bootstraps_admin_when_empty_db():
+    # Clear all users to simulate brand new DB
+    db = TestingSessionLocal()
+    db.query(User).delete()
+    db.commit()
+    db.close()
+
+    res = client.post("/api/v1/auth/register", json={
+        "username": "first_admin",
+        "email": "first_admin@test.com",
+        "password": "adminpassword"
+    })
+    assert res.status_code == 200
+    user_id = res.json()["user_id"]
+
+    # Verify first user received role 1 (admin)
+    db = TestingSessionLocal()
+    user = db.query(User).filter(User.id == user_id).first()
+    assert user.role_id == 1
+    db.close()
+

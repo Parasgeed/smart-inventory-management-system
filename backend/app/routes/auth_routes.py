@@ -38,11 +38,36 @@ def register_user(
             detail="Email already registered"
         )
 
+    existing_username = db.query(User).filter(
+        User.username == user.username
+    ).first()
+
+    if existing_username:
+        raise HTTPException(
+            status_code=400,
+            detail="Username already taken"
+        )
+
+    assigned_role_id = user.role_id
+    if assigned_role_id is None:
+        total_users = db.query(User).count()
+        if total_users == 0:
+            admin_role = db.query(Role).filter(Role.name.ilike("admin")).first()
+            assigned_role_id = admin_role.id if admin_role else 1
+        else:
+            default_role = (
+                db.query(Role).filter(Role.name.ilike("user")).first()
+                or db.query(Role).filter(Role.name.ilike("staff")).first()
+                or db.query(Role).filter(Role.name != "admin").first()
+                or db.query(Role).first()
+            )
+            assigned_role_id = default_role.id if default_role else 1
+
     new_user = User(
         username=user.username,
         email=user.email,
         password_hash=hash_password(user.password),
-        role_id=user.role_id
+        role_id=assigned_role_id
     )
 
     db.add(new_user)

@@ -16,7 +16,7 @@ class UserCreate(BaseModel):
         max_length=100
     )
 
-    role_id: int
+    role_id: Optional[int] = None
 
 
 class UserLogin(BaseModel):
