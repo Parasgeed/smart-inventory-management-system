@@ -46,8 +46,43 @@ from app.routes.sales_return_routes import router as sales_return_router
 from app.routes.purchase_return_routes import router as purchase_return_router
 from app.routes.search_routes import router as search_router
 from app.routes.notification_routes import router as notification_router
+from app.routes.test_routes import router as test_router
+from app.routes.forecast_routes import router as forecast_router
 
-app = FastAPI()
+import os
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
+app = FastAPI(
+    title="Smart Inventory Management System API",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# Production-configurable CORS middleware
+allowed_origins_raw = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000"
+)
+origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
+
+if "*" in origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -69,6 +104,28 @@ api_router.include_router(report_router)
 api_router.include_router(inventory_log_router)
 api_router.include_router(settings_router)
 api_router.include_router(notification_router)
+api_router.include_router(test_router)
+api_router.include_router(forecast_router)
+
+
+@app.get("/health", tags=["Health"])
+@api_router.get("/health", tags=["Health"])
+def health_check():
+    """Liveness & readiness probe verifying database connectivity."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {
+            "status": "healthy",
+            "database": "connected",
+        }
+    except Exception:
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": "Database connectivity check failed"
+        }
+
 
 app.include_router(api_router)
 

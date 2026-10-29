@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -43,7 +43,7 @@ def get_all_sales_orders(
 
 @router.get("/{order_id}", response_model=SalesOrderResponse)
 def get_sales_order(
-    order_id: int,
+    order_id: int = Path(..., ge=1, description="Sales Order ID must be a positive integer"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

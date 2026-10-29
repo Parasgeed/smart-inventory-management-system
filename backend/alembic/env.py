@@ -32,6 +32,8 @@ from app.models.customer_model import Customer
 from app.models.invoice_model import Invoice, InvoiceItem
 from app.models.payment_model import Payment
 from app.models.notification_model import Notification
+from app.models.sales_return_model import SalesReturn, SalesReturnItem
+from app.models.purchase_return_model import PurchaseReturn, PurchaseReturnItem
 
 config = context.config
 db_url = os.getenv("DATABASE_URL")

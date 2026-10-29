@@ -45,20 +45,28 @@ function PurchasesPage() {
   }, []);
 
   useEffect(() => {
-    if (products.length > 0 && location.state?.action === 'restock' && location.state?.productId) {
-      const prod = products.find(p => p.id === location.state.productId);
+    const searchParams = new URLSearchParams(location.search);
+    const queryProductId = searchParams.get('product_id');
+    const queryQty = searchParams.get('qty');
+
+    const targetProductId = location.state?.productId || (queryProductId ? Number(queryProductId) : null);
+    const targetQty = location.state?.quantity || (queryQty ? Number(queryQty) : 1);
+    const isRestockAction = location.state?.action === 'restock' || Boolean(queryProductId);
+
+    if (products.length > 0 && isRestockAction && targetProductId) {
+      const prod = products.find(p => p.id === targetProductId);
       if (prod) {
         setCreateModalOpen(true);
         setForm(prev => ({
           ...prev,
           supplier_id: prod.supplier_id || '',
-          items: [{ product_id: prod.id, quantity: 1, unit_price: prod.cost_price || 0 }]
+          items: [{ product_id: prod.id, quantity: targetQty, unit_price: prod.cost_price || 0 }]
         }));
         // Clean up location state to prevent re-opening on refresh
-        window.history.replaceState({}, document.title);
+        window.history.replaceState({}, document.title, location.pathname);
       }
     }
-  }, [location.state, products]);
+  }, [location.state, location.search, products]);
 
   const fetchData = async () => {
     setLoading(true);

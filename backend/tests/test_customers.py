@@ -71,7 +71,7 @@ def test_soft_delete_customer_without_sales():
         mock_query = MagicMock()
         if model.__name__ == "Customer":
             mock_query.filter.return_value.first.return_value = mock_customer
-        elif model.__name__ == "Sale":
+        elif model.__name__ in ("Sale", "SalesOrder"):
             mock_query.filter.return_value.count.return_value = 0
         return mock_query
         
@@ -112,7 +112,7 @@ def test_soft_delete_customer_with_sales():
         mock_query = MagicMock()
         if model.__name__ == "Customer":
             mock_query.filter.return_value.first.return_value = mock_customer
-        elif model.__name__ == "Sale":
+        elif model.__name__ in ("Sale", "SalesOrder"):
             mock_query.filter.return_value.count.return_value = 1  # Customer has 1 sale
         return mock_query
         

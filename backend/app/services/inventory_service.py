@@ -94,7 +94,8 @@ def adjust_stock(
             message=f"Product '{product.name}' (SKU: {product.sku}) is completely out of stock.",
             reference_id=product.id
         )
-    elif new_quantity <= product.reorder_level and previous_quantity > product.reorder_level:
+    reorder_lvl = getattr(product, "reorder_level", None)
+    if isinstance(reorder_lvl, (int, float)) and new_quantity <= reorder_lvl and previous_quantity > reorder_lvl:
         create_notification_for_all_users(
             db=db,
             type="LOW_STOCK",

@@ -35,3 +35,9 @@ rsa==4.9.1
 
 six==1.17.0
 razorpay==1.4.1
+
+# Machine Learning & Forecasting
+catboost>=1.2.0
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0

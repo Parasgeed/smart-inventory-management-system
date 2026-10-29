@@ -159,12 +159,21 @@ function DashboardPage() {
                       <span className="font-semibold block">{p.name}</span>
                       <span className="font-mono text-shade-50 text-micro">{p.sku}</span>
                     </div>
-                    <button 
-                      onClick={() => navigate('/purchases', { state: { action: 'restock', productId: p.id } })}
-                      className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded-full transition-all text-xs cursor-pointer"
-                    >
-                      Restock
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button 
+                        onClick={() => navigate(`/forecasting?product_id=${p.id}`)}
+                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 bg-canvas-cream border border-hairline-light hover:bg-shade-30 text-ink font-semibold rounded-full transition-all text-xs cursor-pointer"
+                        title="Forecast demand for this product"
+                      >
+                        Forecast
+                      </button>
+                      <button 
+                        onClick={() => navigate('/purchases', { state: { action: 'restock', productId: p.id } })}
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded-full transition-all text-xs cursor-pointer"
+                      >
+                        Restock
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -182,11 +191,18 @@ function DashboardPage() {
                       <span className="font-semibold block">{p.name}</span>
                       <span className="text-micro text-shade-50">Limit: {p.reorder_level}</span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <span className="font-mono font-semibold bg-pistachio-10 text-ink px-2 py-0.5 rounded-full text-xs">Stock: {p.quantity}</span>
                       <button 
+                        onClick={() => navigate(`/forecasting?product_id=${p.id}`)}
+                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 bg-canvas-cream border border-hairline-light hover:bg-shade-30 text-ink font-semibold rounded-full transition-all text-xs cursor-pointer"
+                        title="Forecast demand for this product"
+                      >
+                        Forecast
+                      </button>
+                      <button 
                         onClick={() => navigate('/purchases', { state: { action: 'restock', productId: p.id } })}
-                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-primary hover:bg-shade-70 text-on-primary font-semibold rounded-full transition-all text-xs cursor-pointer absolute right-2 md:relative md:right-0"
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-primary hover:bg-shade-70 text-on-primary font-semibold rounded-full transition-all text-xs cursor-pointer"
                       >
                         Restock
                       </button>
@@ -205,31 +221,49 @@ function DashboardPage() {
         {/* Left Hand: Custom Charts / Top Products */}
         <div className="space-y-6">
           
-          {/* Monthly Revenue Bar Chart (Shopify UI styled) */}
+          {/* Monthly Revenue Bar Chart */}
           <div className="bg-canvas-light p-6 rounded-lg border border-hairline-light shadow-[0_8px_8px_rgba(0,0,0,0.02),_0_0_0_1px_rgba(0,0,0,0.02)]">
-            <h3 className="font-display text-heading-md font-semibold text-ink mb-6">Monthly Sales Revenue</h3>
-            
-            <div className="h-64 flex items-end justify-around border-b border-hairline-light pb-4">
-              {monthlySales.map(m => {
-                const heightPercent = (Number(m.total_amount) / maxMonthlySales) * 100;
-                return (
-                  <div key={m.month} className="flex flex-col items-center group relative w-12">
-                    {/* Tooltip on Hover */}
-                    <div className="absolute bottom-full mb-2 hidden group-hover:block bg-ink text-on-primary text-micro rounded py-1 px-2 font-mono z-10 shadow-lg whitespace-nowrap">
-                      ₹{Number(m.total_amount).toFixed(2)} ({m.count} bills)
-                    </div>
-                    
-                    {/* Chart Bar */}
-                    <div 
-                      style={{ height: `${Math.max(heightPercent, 3)}%` }} 
-                      className="w-8 bg-aloe-10 rounded-t-sm group-hover:bg-primary transition-all duration-200"
-                    />
-                    
-                    <span className="text-micro text-shade-50 mt-2 font-mono whitespace-nowrap rotate-[-15deg] sm:rotate-0">{m.month}</span>
-                  </div>
-                );
-              })}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display text-heading-md font-semibold text-ink">Monthly Sales Revenue</h3>
+              <span className="text-caption text-shade-50 font-mono">Last 6 Months</span>
             </div>
+            
+            {monthlySales.length === 0 ? (
+              <div className="h-64 flex items-center justify-center text-caption text-shade-50">
+                No sales registered in this period.
+              </div>
+            ) : (
+              <div className="h-64 flex items-end justify-around border-b border-hairline-light pb-4 pt-6">
+                {monthlySales.map(m => {
+                  const heightPercent = Math.max(Math.round((Number(m.total_amount) / maxMonthlySales) * 100), 4);
+                  return (
+                    <div key={m.month} className="h-full flex flex-col justify-end items-center group relative w-14 sm:w-16">
+                      {/* Tooltip on Hover */}
+                      <div className="absolute top-0 -translate-y-full mb-2 hidden group-hover:flex flex-col items-center bg-ink text-on-primary text-micro rounded py-1.5 px-3 font-mono z-20 shadow-xl whitespace-nowrap pointer-events-none">
+                        <span className="font-semibold text-aloe-10">₹{Number(m.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span className="text-[11px] text-shade-30">{m.count} {m.count === 1 ? 'order' : 'orders'}</span>
+                      </div>
+                      
+                      {/* Value Label above Bar */}
+                      <span className="text-[11px] font-mono text-shade-50 mb-1.5 font-medium group-hover:text-ink transition-colors">
+                        ₹{(Number(m.total_amount) / 1000).toFixed(0)}k
+                      </span>
+
+                      {/* Bar Container & Track */}
+                      <div className="w-8 sm:w-10 bg-canvas-cream border border-hairline-light rounded-t-md overflow-hidden flex items-end h-40">
+                        <div 
+                          style={{ height: `${heightPercent}%` }} 
+                          className="w-full bg-primary hover:bg-shade-70 rounded-t-sm transition-all duration-300 shadow-sm cursor-pointer"
+                        />
+                      </div>
+                      
+                      {/* Month Label */}
+                      <span className="text-micro font-medium text-shade-60 mt-3 font-mono whitespace-nowrap">{m.month}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Top Selling Products List */}
@@ -249,8 +283,17 @@ function DashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-hairline-light text-body-md text-ink">
                     {topSelling.map(p => (
-                      <tr key={p.product_id} className="hover:bg-canvas-cream/20">
-                        <td className="py-3 font-semibold text-ink">{p.product_name}</td>
+                      <tr key={p.product_id} className="hover:bg-canvas-cream/20 group">
+                        <td className="py-3 font-semibold text-ink flex items-center justify-between">
+                          <span>{p.product_name}</span>
+                          <button
+                            onClick={() => navigate(`/forecasting?product_id=${p.product_id}`)}
+                            className="opacity-0 group-hover:opacity-100 px-2 py-0.5 bg-canvas-cream border border-hairline-light hover:bg-shade-30 text-ink text-[11px] font-semibold rounded transition-all cursor-pointer mr-2"
+                            title="Forecast demand"
+                          >
+                            Forecast
+                          </button>
+                        </td>
                         <td className="py-3 text-right font-mono font-medium">{p.total_quantity_sold}</td>
                         <td className="py-3 text-right font-mono font-semibold text-green-700">₹{Number(p.total_revenue).toFixed(2)}</td>
                       </tr>

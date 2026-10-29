@@ -4,13 +4,13 @@ from typing import List, Optional
 from datetime import datetime
 
 class SalesReturnItemCreate(BaseModel):
-    product_id: int
-    quantity: int = Field(gt=0)
+    product_id: int = Field(gt=0, description="Product ID must be greater than 0")
+    quantity: int = Field(gt=0, description="Quantity must be greater than 0")
     refund_amount: Decimal = Field(ge=0, max_digits=10, decimal_places=2)
     reason: Optional[str] = None
 
 class SalesReturnCreate(BaseModel):
-    sales_order_id: int
+    sales_order_id: int = Field(gt=0, description="Sales Order ID must be greater than 0")
     notes: Optional[str] = None
     items: List[SalesReturnItemCreate]
 

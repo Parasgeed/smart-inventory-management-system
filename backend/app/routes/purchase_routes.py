@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
@@ -36,7 +36,7 @@ def get_purchases(
 
 @router.get("/{purchase_id}", response_model=PurchaseResponse)
 def get_purchase(
-    purchase_id: int,
+    purchase_id: int = Path(..., ge=1, description="Purchase ID must be a positive integer"),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):

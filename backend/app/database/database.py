@@ -5,8 +5,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
 
-print("DATABASE_URL =", os.getenv("DATABASE_URL"))
-
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL)
@@ -27,9 +25,8 @@ def get_db():
         db.close()
 
 try:
-    connection = engine.connect()
-    print("Database connected successfully!")
-    connection.close()
-except Exception as e:
-    print("Database connection failed")
-    print(e)
+    with engine.connect() as connection:
+        pass
+except Exception:
+    # Do not print raw exception to prevent leaking database credentials in logs
+    pass

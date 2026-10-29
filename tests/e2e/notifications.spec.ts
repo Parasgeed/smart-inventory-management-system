@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Notifications Feature E2E', () => {
-  const FRONTEND_URL = 'http://localhost:5173';
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
   const API_URL = 'http://127.0.0.1:8000/api/v1';
   let productName = '';
   let sku = '';
   let productId = '';
+  let supplierId = '';
+  let categoryId = '';
   let uniqueId = '';
+  let token = '';
 
   test.beforeEach(async ({ request, page }, testInfo) => {
     uniqueId = Date.now().toString() + testInfo.workerIndex;
@@ -15,7 +18,7 @@ test.describe('Notifications Feature E2E', () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       form: { username: 'paras@example.com', password: 'admin' }
     });
-    const token = (await loginRes.json()).access_token;
+    token = (await loginRes.json()).access_token;
     
     // 2. Create Supplier via API
     const supRes = await request.post(`${API_URL}/suppliers/`, {
@@ -26,14 +29,14 @@ test.describe('Notifications Feature E2E', () => {
         email: `nsup${uniqueId}@ex.com` 
       }
     });
-    const supplierId = (await supRes.json()).id;
+    supplierId = (await supRes.json()).id.toString();
     
     // 3. Create Category via API
     const catRes = await request.post(`${API_URL}/categories/`, {
       headers: { Authorization: `Bearer ${token}` },
       data: { name: `Notif Cat ${uniqueId}`, description: 'Test' }
     });
-    const categoryId = (await catRes.json()).id;
+    categoryId = (await catRes.json()).id.toString();
     
     // 4. Create Product via API with Quantity 10, Reorder Level 5
     productName = `Notif Prod ${uniqueId}`;
@@ -49,8 +52,8 @@ test.describe('Notifications Feature E2E', () => {
         selling_price: 20,
         reorder_level: 5,
         quantity: 10,
-        category_id: categoryId,
-        supplier_id: supplierId
+        category_id: parseInt(categoryId, 10),
+        supplier_id: parseInt(supplierId, 10)
       }
     });
     productId = (await prodRes.json()).id.toString();
@@ -63,6 +66,25 @@ test.describe('Notifications Feature E2E', () => {
     
     // Verify dashboard loaded
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  });
+
+  test.afterEach(async ({ request }) => {
+    // Automatically clean up all test records created in this test run so they don't persist in the DB/UI
+    if (token && (productId || supplierId || categoryId)) {
+      try {
+        await request.post(`${API_URL}/test-cleanup/teardown`, {
+          headers: { Authorization: `Bearer ${token}` },
+          data: {
+            product_id: productId ? parseInt(productId, 10) : undefined,
+            supplier_id: supplierId ? parseInt(supplierId, 10) : undefined,
+            category_id: categoryId ? parseInt(categoryId, 10) : undefined,
+            unique_id: uniqueId
+          }
+        });
+      } catch (err) {
+        console.error('Teardown failed to delete test entities:', err);
+      }
+    }
   });
 
   test('should trigger and display a low stock notification when stock drops below reorder level', async ({ page }) => {

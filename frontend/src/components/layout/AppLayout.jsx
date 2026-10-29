@@ -4,8 +4,8 @@ import { Outlet, Navigate } from 'react-router-dom';
 
 /**
  * Main application layout container.
- * Uses a CSS grid to create the sidebar and main content areas.
- * The sidebar has a fixed width (240px), and the main content area fills the remaining space.
+ * Uses a fixed flex layout where the sidebar and header are pinned in place,
+ * and only the main content area scrolls vertically.
  */
 const AppLayout = () => {
   const token = localStorage.getItem('token');
@@ -16,14 +16,16 @@ const AppLayout = () => {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-[240px_1fr] bg-canvas-cream">
-      <div className="col-span-1 border-r border-hairline-light">
+    <div className="h-screen w-screen flex overflow-hidden bg-canvas-cream">
+      {/* Fixed Sidebar */}
+      <div className="w-[240px] flex-shrink-0 h-full border-r border-hairline-light z-20">
         <Sidebar />
       </div>
 
-      <div className="col-span-1 flex flex-col">
+      {/* Main Content Area: Header pinned at top, Main scrolls */}
+      <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
         <Header />
-        <main className="flex-grow p-8">
+        <main className="flex-1 overflow-y-auto p-8">
           <Outlet />
         </main>
       </div>

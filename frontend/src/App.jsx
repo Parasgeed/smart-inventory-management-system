@@ -12,6 +12,7 @@ import InvoicesPage from './pages/InvoicesPage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import PaymentsPage from './pages/PaymentsPage';
 import ReportsPage from './pages/ReportsPage';
+import ForecastingPage from './pages/ForecastingPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="/invoices" element={<InvoicesPage />} />
         <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/forecasting" element={<ForecastingPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
@@ -36,5 +38,6 @@ function App() {
     </Routes>
   );
 }
+
 
 export default App;

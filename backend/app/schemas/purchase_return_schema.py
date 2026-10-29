@@ -3,8 +3,8 @@ from typing import List, Optional
 from datetime import datetime
 
 class PurchaseReturnItemBase(BaseModel):
-    product_id: int
-    quantity: int = Field(gt=0)
+    product_id: int = Field(gt=0, description="Product ID must be greater than 0")
+    quantity: int = Field(gt=0, description="Quantity must be greater than 0")
     refund_amount: float
     reason: Optional[str] = None
 
@@ -19,7 +19,7 @@ class PurchaseReturnItemResponse(PurchaseReturnItemBase):
         from_attributes = True
 
 class PurchaseReturnBase(BaseModel):
-    purchase_id: int
+    purchase_id: int = Field(gt=0, description="Purchase ID must be greater than 0")
     notes: Optional[str] = None
 
 class PurchaseReturnCreate(PurchaseReturnBase):

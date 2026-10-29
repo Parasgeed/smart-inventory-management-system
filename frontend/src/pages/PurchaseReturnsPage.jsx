@@ -23,6 +23,7 @@ const PurchaseReturnsPage = () => {
   
   const [returnItems, setReturnItems] = useState([]);
   const [returnNotes, setReturnNotes] = useState('');
+  const [formError, setFormError] = useState('');
   
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,10 +51,20 @@ const PurchaseReturnsPage = () => {
 
   const handleFetchOrder = async () => {
     if (!purchaseId) return;
+    const parsedId = parseInt(purchaseId, 10);
+    if (isNaN(parsedId) || parsedId <= 0) {
+      setOrderError('Please enter a valid positive Purchase Order ID');
+      setPurchaseOrder(null);
+      setReturnItems([]);
+      setFormError('');
+      return;
+    }
+
     setLoadingOrder(true);
     setOrderError('');
+    setFormError('');
     try {
-      const res = await client.get(`/purchases/${purchaseId}`);
+      const res = await client.get(`/purchases/${parsedId}`);
       setPurchaseOrder(res.data);
       // Pre-fill return items with 0 quantity
       setReturnItems(res.data.purchase_items.map(item => ({
@@ -65,7 +76,9 @@ const PurchaseReturnsPage = () => {
         reason: ''
       })));
     } catch (err) {
-      setOrderError(err.response?.data?.detail || 'Purchase order not found');
+      const detail = err.response?.data?.detail;
+      const errorMsg = Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : (detail || 'Purchase order not found');
+      setOrderError(errorMsg);
       setPurchaseOrder(null);
       setReturnItems([]);
     } finally {
@@ -74,18 +87,22 @@ const PurchaseReturnsPage = () => {
   };
 
   const handleQuantityChange = (index, val) => {
-    const qty = parseInt(val) || 0;
+    const rawQty = parseInt(val) || 0;
+    // Enforce 0 <= qty <= max_quantity
+    const qty = Math.max(0, Math.min(rawQty, returnItems[index].max_quantity));
     const newItems = [...returnItems];
-    newItems[index].quantity = Math.min(qty, newItems[index].max_quantity);
-    newItems[index].refund_amount = newItems[index].quantity * newItems[index].unit_price;
+    newItems[index].quantity = qty;
+    newItems[index].refund_amount = qty * newItems[index].unit_price;
     setReturnItems(newItems);
+    if (formError) setFormError('');
   };
 
   const submitReturn = async (e) => {
     e.preventDefault();
+    setFormError('');
     const itemsToReturn = returnItems.filter(i => i.quantity > 0);
     if (itemsToReturn.length === 0) {
-      alert("Please select at least one item to return.");
+      setFormError("Please select at least one item to return by setting Return Qty greater than 0.");
       return;
     }
 
@@ -102,6 +119,7 @@ const PurchaseReturnsPage = () => {
         }))
       });
       setCreateModalOpen(false);
+      setFormError('');
       fetchReturns();
       // Reset form
       setPurchaseId('');
@@ -109,7 +127,9 @@ const PurchaseReturnsPage = () => {
       setReturnNotes('');
       setReturnItems([]);
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to create return');
+      const detail = err.response?.data?.detail;
+      const errorMsg = Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : (detail || 'Failed to create return');
+      setFormError(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -121,7 +141,10 @@ const PurchaseReturnsPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-display-sm font-display font-light text-ink tracking-tight">Purchase Returns</h1>
         <button 
-          onClick={() => setCreateModalOpen(true)}
+          onClick={() => {
+            setFormError('');
+            setCreateModalOpen(true);
+          }}
           className="px-5 py-2.5 bg-primary hover:bg-shade-70 text-on-primary rounded-full font-semibold cursor-pointer text-sm transition-colors shadow-sm"
         >
           Create Return
@@ -172,20 +195,57 @@ const PurchaseReturnsPage = () => {
           <div className="bg-canvas-light w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-hairline-light flex justify-between items-center bg-canvas-cream">
               <h2 className="text-xl font-display font-medium text-ink">Process Purchase Return</h2>
-              <button onClick={() => setCreateModalOpen(false)} className="text-shade-40 hover:text-ink transition-colors">&times;</button>
+              <button 
+                onClick={() => {
+                  setCreateModalOpen(false);
+                  setFormError('');
+                }} 
+                className="text-shade-40 hover:text-ink transition-colors"
+              >
+                &times;
+              </button>
             </div>
             
             <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {formError && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-start justify-between shadow-sm animate-fadeIn">
+                  <div className="flex items-center space-x-2.5">
+                    <svg className="w-5 h-5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span className="font-medium">{formError}</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setFormError('')} 
+                    className="text-red-400 hover:text-red-700 transition-colors ml-3 font-bold text-lg leading-none"
+                    aria-label="Dismiss alert"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
+
               {/* Order Lookup */}
               <div className="flex gap-2 items-end">
                 <div className="flex-1 space-y-1">
                   <label className="block text-caption font-semibold text-ink">Purchase Order ID</label>
                   <input 
                     type="number" 
+                    min="1"
+                    step="1"
                     value={purchaseId}
-                    onChange={e => setPurchaseId(e.target.value)}
+                    onKeyDown={e => {
+                      if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={e => {
+                      const cleanVal = e.target.value.replace(/[^0-9]/g, '');
+                      setPurchaseId(cleanVal);
+                    }}
                     className="w-full border border-hairline-light rounded-lg px-3 py-2 outline-none focus:border-ink transition-colors"
-                    placeholder="Enter Purchase ID"
+                    placeholder="Enter positive Purchase ID (e.g. 1)"
                   />
                 </div>
                 <button 
@@ -225,6 +285,11 @@ const PurchaseReturnsPage = () => {
                                   min="0" 
                                   max={item.max_quantity}
                                   value={item.quantity}
+                                  onKeyDown={e => {
+                                    if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+                                      e.preventDefault();
+                                    }
+                                  }}
                                   onChange={e => handleQuantityChange(idx, e.target.value)}
                                   className="w-20 border border-hairline-light rounded px-2 py-1 outline-none focus:border-ink"
                                 />
@@ -255,7 +320,10 @@ const PurchaseReturnsPage = () => {
             <div className="p-6 border-t border-hairline-light bg-canvas-cream flex justify-end gap-3">
               <button 
                 type="button" 
-                onClick={() => setCreateModalOpen(false)}
+                onClick={() => {
+                  setCreateModalOpen(false);
+                  setFormError('');
+                }}
                 className="px-5 py-2 text-ink font-semibold hover:bg-shade-30/50 rounded-full transition-colors"
               >
                 Cancel

@@ -91,7 +91,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-canvas-light sticky top-0 z-10">
+    <header className="bg-canvas-light sticky top-0 z-10 flex-shrink-0">
       <div className="flex items-center justify-between h-20 px-xl border-b border-hairline-light">
         <div>
           <h1 className="font-display text-heading-lg font-light text-ink">{getPageTitle()}</h1>

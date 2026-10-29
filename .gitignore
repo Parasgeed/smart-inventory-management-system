@@ -37,3 +37,8 @@ node_modules/
 # Temporary files
 test_api*.py
 *.png
+*.db
+*.sqlite
+*.sqlite3
+catboost_info/
+Machine learning/models/random_forest_demand_model.pkl

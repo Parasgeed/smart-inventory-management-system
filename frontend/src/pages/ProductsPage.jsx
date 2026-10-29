@@ -1,9 +1,9 @@
-// frontend/src/pages/ProductsPage.jsx
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 
 function ProductsPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -554,6 +554,16 @@ function ProductsPage() {
                         <td className="py-4 px-4 text-center" onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-center space-x-2">
                             <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/forecasting?product_id=${product.id}`);
+                              }}
+                              title="Forecast Demand"
+                              className="p-1.5 rounded-full hover:bg-canvas-cream border border-transparent hover:border-hairline-light text-shade-60 hover:text-ink transition-colors cursor-pointer"
+                            >
+                              📈
+                            </button>
+                            <button 
                               onClick={(e) => openAdjustModal(product, e)}
                               title="Adjust Stock"
                               className="p-1.5 rounded-full hover:bg-aloe-10 text-shade-60 hover:text-ink transition-colors cursor-pointer"
@@ -575,6 +585,7 @@ function ProductsPage() {
                               🗑️
                             </button>
                           </div>
+
                         </td>
                       </tr>
                     );
@@ -628,9 +639,19 @@ function ProductsPage() {
               </button>
             </div>
 
+            <button
+              type="button"
+              onClick={() => navigate(`/forecasting?product_id=${selectedProduct.id}`)}
+              className="w-full py-2 px-3 bg-canvas-cream border border-hairline-light hover:bg-shade-30 text-ink font-semibold rounded-md text-caption transition-colors flex items-center justify-center space-x-2 shadow-sm"
+            >
+              <span>📈</span>
+              <span>Forecast Demand for this Product</span>
+            </button>
+
             <div className="space-y-4 text-body-md text-ink">
               <div>
                 <span className="text-caption text-shade-50 block font-semibold">SKU / Barcode</span>
+
                 <span className="font-mono">{selectedProduct.sku} {selectedProduct.barcode ? `/ ${selectedProduct.barcode}` : ''}</span>
               </div>
               
