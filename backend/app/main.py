@@ -50,14 +50,36 @@ from app.routes.test_routes import router as test_router
 from app.routes.forecast_routes import router as forecast_router
 
 import os
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ensure database tables and base roles are present on fresh deployments."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        from app.database.database import SessionLocal
+        db = SessionLocal()
+        try:
+            if db.query(Role).count() == 0:
+                admin_role = Role(id=1, name="admin", description="Administrator")
+                user_role = Role(id=2, name="user", description="Standard User")
+                db.add_all([admin_role, user_role])
+                db.commit()
+        finally:
+            db.close()
+    except Exception:
+        # Suppress exception on startup to avoid leaking credentials or crashing if DB temporarily down
+        pass
+    yield
 
 app = FastAPI(
     title="Smart Inventory Management System API",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # Production-configurable CORS middleware
